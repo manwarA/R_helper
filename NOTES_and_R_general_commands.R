@@ -25,15 +25,15 @@ samples2 <- str_remove(samples2, "Unshared.Log.QC2_LateStageTumor_pool.QC1")
 samples2 <- samples2[nzchar(samples2)]
 
 
-# to create random distribution with lower bound -0.68 and upper bound 0.82
-#random_dist <- truncnorm::rtruncnorm(n=108, a=-0.68, b=0.82)#, mean=0.003, sd=0.292)
+# to create random distribution with lower bound (-0.68) and upper bound (0.82)
+random_dist <- truncnorm::rtruncnorm(n=108, a=-0.68, b=0.82)#, mean=0.003, sd=0.292)
 
 # apply Wilcoxon test (this does not assume normal distribution)
 wilcox.test(as.numeric(common2[1, 2:193]), random_dist, paired = F, alternative = "two.sided")
 
-#
-# t test rowwise
-#
+#===================================
+# t-test rowwise
+#===================================
 
 x$stat <- sapply(1:nrow(x), function(i) 
 	t.test(	as.numeric(as.character(unlist(x[i,2:4]))), 
@@ -58,7 +58,6 @@ tab <- topTable(ebayes, coef=2, adjust="fdr", n=10)
 # create expression set for GEOquery 
 # it was a test, but the GEO data is very unpredictable
 # making it really hard to convert it into ExpSet
-# 
 
 eset <- ExpressionSet(assayData = as.matrix(mat.gse126848),
                       phenoData =  Biobase::AnnotatedDataFrame(phenoData(test2[[1]])))
@@ -75,29 +74,32 @@ exampleSet <- ExpressionSet(assayData=as.matrix(mat.gse126848),
 length(test)
 test[[1]]
 
-
-
-#set working directory
-setwd("E:\\manuscript_01\\r_dir_gastric")
-
-
+# data.table fread is faster than regular read.csv
 file <- data.table::fread("summed_tum_normal_refine_sam1.csv",
 			sep = "\t", blank.lines.skip=TRUE, header = TRUE)
 
 output1 <- Sys.glob("E:\\02_Proteom_GC_4samples\\NCC_*_Proteome_KU_*\\OUTPUT\\")
 
-paths <- list.files(output1, pattern= glob2rx("*summed_tum_normal_refine*.csv$*"),
+# pattern based matching and retreiving the data
+paths <- list.files(output1, 
+					pattern= glob2rx("*summed_tum_normal_refine*.csv$*"),
                     full.names=T, recursive=T)
 
-df_list = list()
-# Make a function to process each file
+# Make a function to process each file, file name or identifier has to be appended to the respective columns. 
+#				 after that, using sapply, this function can be used to all the files.
 processFile <- function(f) {
-  
   bname = strsplit(basename(f), '_')[[1]][1]
-  df = data.table::fread(f, sep = "\t", blank.lines.skip=TRUE, header = TRUE, 
-                         select = c(1,6:9), data.table = TRUE)
-  colnames(df) = c('uniprot',paste0(bname, '_1'), paste0(bname, '_2'), 
-                   paste0(bname, '_3'), paste0(bname, '_4'))
+  df = data.table::fread(f, 
+						 sep = "\t", 
+						 blank.lines.skip=TRUE, 
+						 header = TRUE, 
+                         select = c(1,6:9), 
+						 data.table = TRUE)
+  colnames(df) = c('uniprot', 
+				   paste0(bname, '_1'), 
+				   paste0(bname, '_2'), 
+                   paste0(bname, '_3'), 
+				   paste0(bname, '_4'))
   df_list = append(df_list, list(df))
   df_list 
                         }
@@ -105,63 +107,42 @@ processFile <- function(f) {
 # Apply the function to all files.
 result <- sapply(paths, processFile)
 
+#===================================
+# Merging
+#===================================
+# Multimerge, merge multiple dfs, if the number of dfs are large and the size is also big, it can run out of memory.
 # allow.cartesian = TRUE is default in DF, while in data.table merge, it is FALSE, 
-# you need to set it explicitly to proceed merging of data.tables 
+# you need to set it explicitly to proceed merging of data.tables.
 
-merge1 <- Reduce(function(x, y) merge(x, y, all.x = TRUE, by = c("uniprot"), 
+# base R solution
+merged_output <- Reduce(function(x, y) merge(x, y, all.x = TRUE, by = c("uniprot"), 
                                             allow.cartesian=TRUE), result[1:40])
 
+# purr base solution
 list_of_data %>% purrr::reduce(left_join, by = "row_names") # for purr based solution to merge multiple dataframes; but it needs a unique col name (e.g. row_names) in each df.
 
-merge1 <- merge1[!duplicated(merge1$uniprot), ]
-merge2 <- Reduce(function(x, y) merge(x, y, all.x = TRUE, by = c("uniprot"), 
-                                      allow.cartesian=TRUE), result[41:79])
-merge2 <- merge2[!duplicated(merge2$uniprot), ]
-#result_merge <- result_merge[rowSums(is.na(result_merge[, 2:ncol(result_merge)])) == 0, ]
-#result_merge <- result_merge %>%  dplyr::select(-starts_with("gene"))
-
-merge <- merge(merge1, merge2, by = "uniprot", all = TRUE)
-merge <- as.data.frame(merge)
-
-merge <- merge[, colMeans(merge[, 2:ncol(merge)], na.rm = TRUE) > 50]
-
 # data table approach,let see how efficient it is
-# 
 library(data.table)
 setkey(result_merge2, "uniprot")
 df2_3 <- as.data.table(merge2)[as.data.table(merge1), on = "uniprot"]# allow.cartesian=TRUE ]
 
-
-uniprot.list <- c(result_merge2[, "uniprot"], result_merge3[, 'uniprot'],
-                  result_merge4[, 'uniprot'],result_merge5[, 'uniprot'])
-
-uniprot.list <- as.data.frame(unique(uniprot.list))
-colnames(uniprot.list) <- "uniprot"
+#result_merge <- result_merge[rowSums(is.na(result_merge[, 2:ncol(result_merge)])) == 0, ]
+#result_merge <- result_merge %>%  dplyr::select(-starts_with("gene"))
 
 
-finalMerge <- merge(uniprot.list, result_merge2, by.x = "uniprot", by.y = "uniprot", all.x =FALSE)
-finalMerge <- merge(finalMerge, result_merge3,   by = "uniprot", all.x =FALSE)
-finalMerge <- merge(finalMerge, result_merge4,   by = "uniprot", all.x =FALSE)
-finalMerge <- merge(finalMerge, result_merge5,   by = "uniprot", all.x =TRUE)
-
-
-dim(result_merge)                       
-head(result_merge)
 
 lapply(result, dim)
-
-
-# saving the workflow
-save.image(file = "gastric_data.RData")
-
+#==================================
+# Negation, it should be the part of R-base
+#=================================
 # to negate the function in r 
-"%!in%" <- function(x,table) match(x,table, nomatch = 0) == 0
+"%notin%" <- function(x,table) match(x,table, nomatch = 0) == 0
+'%notin%' <- Negate('%in%')
 
-
-
-
-A simple function to remove leading and trailing whitespace:
-
+#==================================
+# Trim white spaces 
+#=================================
+# A simple function to remove leading and trailing whitespace:
 trim <- function( x ) {
   gsub("(^[[:space:]]+|[[:space:]]+$)", "", x)
 }
@@ -172,7 +153,7 @@ x <- c(" lead", "trail ", " both ", " both and middle ", " _special")
 ## a much less concise regex 
 gsub_trim <- function (x) gsub("^\\s+|\\s+$", "", x)
 
-#<<<<<<<<< change the bahavior of warnings
+# change the bahavior of warnings
 # It may be useful to specify
 # options(warn=2, error=recover)
 # As mentioned by @plannapus, warn=2 will upgrade warnings to errors; error=recover will drop you into a debug/browser mode at the point where the warning (now upgraded to an error) occurred. (Use options(warn=0, error=NULL) to restore the original settings.)
@@ -193,11 +174,9 @@ gse33 <- getGEO("GSE33814", GSEMatrix = TRUE,
                 destdir="E:/NASH/geo_data_nash",
                 getGPL = FALSE)
 
-
-#
+#==================================
 # Affymatrix can be manipulated in multiple ways
-#
-
+#=================================
 affyids <- gse37_deg$ID
 library(hgu133plus2.db)
 columns(hgu133plus2.db)
@@ -215,9 +194,9 @@ converted_ID <- biomaRt::getBM(attributes=c('affy_hg_u133_plus_2', 'hgnc_symbol'
       mart = mart)
 
 
-#
+#==================================
 # Feature selction and machine learing
-#
+#==================================
 
 # First, identify the highly correlated attributes to save time, generally, > abs(0.75) or higher
 # attributes should be removed; the correlation can be computed using base function "cor"
@@ -1509,3 +1488,4 @@ keep_one_column <- function(input_df, term){
   
   return (mat_col)
 }
+
