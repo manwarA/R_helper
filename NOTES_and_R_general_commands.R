@@ -40,10 +40,12 @@ x$stat <- sapply(1:nrow(x), function(i)
 		as.numeric(as.character(unlist(x[i,8:10])))
 			)[c("p.value")])
 
-
-# limma for microarray data;
+#===================================
+# Limma for gene expression
+#===================================
+# limma for microarray data analysis
 # limma is for continuous data while the DESeq2 and EdgeR are for count data
-# In microarray, the RMA converts the intensities into log2 form, making it easy to find log2FC
+# Moreover, in microarray, the Robust Muti-array analysis (RMA) converts the intensities into log2 form, making it easy to find log2FC
 # and simply running the t test, the significance can be calculated
 
 design_limm <- model.matrix(~ factor(mapping3$sampleType))
@@ -53,11 +55,13 @@ ebayes <- eBayes(fit)
 lod <- -log10(ebayes[["p.value"]][, 2])
 mtstat <- ebayes[["t"]][, 2]
 
+# top significant genes
 tab <- topTable(ebayes, coef=2, adjust="fdr", n=10)
 
+				 
 # create expression set for GEOquery 
-# it was a test, but the GEO data is very unpredictable
-# making it really hard to convert it into ExpSet
+# it was a test, but the GEO data is very unpredictable/messsy
+# making it really hard to convert it into ExpressionSet
 
 eset <- ExpressionSet(assayData = as.matrix(mat.gse126848),
                       phenoData =  Biobase::AnnotatedDataFrame(phenoData(test2[[1]])))
@@ -71,14 +75,11 @@ exampleSet <- ExpressionSet(assayData=as.matrix(mat.gse126848),
                                experimentData=experimentData(test2[[1]]),
                                annotation="hgu95av2")
 
-length(test)
-test[[1]]
-
 # data.table fread is faster than regular read.csv
 file <- data.table::fread("summed_tum_normal_refine_sam1.csv",
 			sep = "\t", blank.lines.skip=TRUE, header = TRUE)
 
-output1 <- Sys.glob("E:\\02_Proteom_GC_4samples\\NCC_*_Proteome_KU_*\\OUTPUT\\")
+output1 <- Sys.glob("NCC_*_Proteome_KU_*\\OUTPUT\\")
 
 # pattern based matching and retreiving the data
 paths <- list.files(output1, 
@@ -86,7 +87,7 @@ paths <- list.files(output1,
                     full.names=T, recursive=T)
 
 # Make a function to process each file, file name or identifier has to be appended to the respective columns. 
-#				 after that, using sapply, this function can be used to all the files.
+# after that, using sapply, this function can be used to all the files.
 processFile <- function(f) {
   bname = strsplit(basename(f), '_')[[1]][1]
   df = data.table::fread(f, 
@@ -129,9 +130,8 @@ df2_3 <- as.data.table(merge2)[as.data.table(merge1), on = "uniprot"]# allow.car
 #result_merge <- result_merge[rowSums(is.na(result_merge[, 2:ncol(result_merge)])) == 0, ]
 #result_merge <- result_merge %>%  dplyr::select(-starts_with("gene"))
 
-
-
 lapply(result, dim)
+
 #==================================
 # Negation, it should be the part of R-base
 #=================================
@@ -154,23 +154,30 @@ x <- c(" lead", "trail ", " both ", " both and middle ", " _special")
 gsub_trim <- function (x) gsub("^\\s+|\\s+$", "", x)
 
 # change the bahavior of warnings
-# It may be useful to specify
-# options(warn=2, error=recover)
-# As mentioned by @plannapus, warn=2 will upgrade warnings to errors; error=recover will drop you into a debug/browser mode at the point where the warning (now upgraded to an error) occurred. (Use options(warn=0, error=NULL) to restore the original settings.)
+# It may be useful to specify options(warn=2, error=recover)
+# As mentioned by @plannapus, warn=2 will upgrade warnings to errors; error=recover will drop you into a debug/browser mode at the point where the warning (now upgraded to an error) occurred. 
+# (Use options(warn=0, error=NULL) to restore the original settings.)
 
 
-des  <- test2[[1]]$description
-geoa <- test2[[1]]$geo_accession
-des_geoa <- data.frame(des = des, geoa = geoa)
+#==================================
+# String formating and editing
+#=================================
+# padding a string
 des <- stringr::str_pad(des, 4, pad = "0")
-match(des, colnames(mat.gse126848))
-match(des_geoa$des, colnames(mat.gse126848))
+
+#replace multiple patterns in name column
+df$name <- gsub('A', 'Andy',
+           gsub('B', 'Bob',
+           gsub('C', 'Chad', df$name)))
+
 ifelse(match(des_geoa$des, colnames(mat.gse126848)), 
        gsub(., des_geoa$geoa, .), colnames(mat.gse126848) )
 des2 <- des[match(des, colnames(mat.gse126848))]
 
-
-gse33 <- getGEO("GSE33814", GSEMatrix = TRUE, 
+#==================================
+# GEO related
+#=================================
+gse <- getGEO("GSE33814", GSEMatrix = TRUE, 
                 destdir="E:/NASH/geo_data_nash",
                 getGPL = FALSE)
 
@@ -197,39 +204,32 @@ converted_ID <- biomaRt::getBM(attributes=c('affy_hg_u133_plus_2', 'hgnc_symbol'
 #==================================
 # Feature selction and machine learing
 #==================================
-
 # First, identify the highly correlated attributes to save time, generally, > abs(0.75) or higher
 # attributes should be removed; the correlation can be computed using base function "cor"
 
-corrMatrix <- cor(dresist_lung[, 1:40999])
+corrMatrix <- cor(df)
 
 highlyCorrelated <- caret::findCorrelation(corrMatrix, cutoff = 0.75)
 
 # remove those features that have > 0.75 correlation 
 dresist_lung_corr75 <- dresist_lung[, -highlyCorrelated]
 
-
 # createDataPartition() function from the caret package to split the original dataset into
 # a training and testing set and split data into training (80%) and testing set (20%)
 
-# > dim(dresist_lung_corr75)
-# [1]   111 22363
- 
 parts = createDataPartition(dresist_lung$sampleType, p = 0.8, list = F)
 caret.train = dresist_lung_corr75[parts, ]
 caret.test = dresist_lung_corr75[-parts, ]
 x_train = caret.train[, -length(dresist_lung_corr75)]
 y_train = caret.train[,  length(dresist_lung_corr75)]
 
-
 # specifying the CV technique as well as the random forest algorithm which will be passed into 
-# the rfe() function in feature selection
+# the recursive feature eleminiation (rfe) rfe() function in feature selection
 
 control_rfe = rfeControl(functions = rfFuncs, 	# random forest
                          method = "repeatedcv", # repeated cv
                          repeats = 10, 		# number of repeats
                          number =  10) 		# number of folds
-
 
 # Performing RFE
 result_rfe = rfe(x = x_train, 
@@ -239,10 +239,6 @@ result_rfe = rfe(x = x_train,
 
 # summarising the results
 result_rfe
-
-# The top 5 variables (out of 10):
-#   cg02855924, cg26325335, cg27071460, cg14823851, cg01573747
-
 
 # creating a model using these features
 fitControl <- trainControl(## 10-fold CV
@@ -264,20 +260,14 @@ plot(model.cv)
 
 # score for TEST data set
 class <- predict(model.cv, caret.test)
-probs <- predict(model.cv, caret.test,'prob')
+probs <- predict(model.cv, caret.test, 'prob')
 
+# bind wtih actual data for easier inspection
 TEST.scored <- cbind(caret.test,class,probs) %>% mutate(data = "TEST")
 
-
-
-#replace multiple patterns in name column
-df$name <- gsub('A', 'Andy',
-           gsub('B', 'Bob',
-           gsub('C', 'Chad', df$name)))
-
-############################################
+#==================================
 # Convert geneIDs from ENSEM to ENTREIDs
-############################################
+#==================================
 
 # While converting the names, BiTr usually returns a df with two columns, "fromType" & "toType", and it is oftenly difficult to match them
 # to the original dataset. This is a simple function around that concept that BiTr should bind to converted IDs back to the original df 
@@ -299,54 +289,49 @@ bitr2 <- function(df) {
     df
 }
 
-
-# list to df convert
-luad_target_genes <- DataFrame("gene_name" = unlist(luad_target_genes))
-luad_target_genes <- merge(luad_target_genes, dataDEGs, by = "gene_name")
-
 luad_target_genes <- luad_target_genes[! duplicated(luad_target_genes), ]
 
+#==================================
 # boxplot
-
+#==================================
 checkDiffExp <- function(geneName, df) {
     normal = df[rownames(df) == geneName, samples.solid.tissue.normal]
     tumor  = df[rownames(df) == geneName, samples.primary.tumour]
-    y_max = ifelse(any( max(nor) | max(tum)) > 25000, 25000, max(max(nor),  max(tum))) 
+    y_max = ifelse(any( max(normal) | max(tumor)) > 25000, 25000, max(max(normal),  max(tumor))) 
     boxplot(normal, tumor, ylim = c(0, y_max),
             main= geneName,
             names = c("Normal", "Tumor"),
             xlab= "Type",
-            ylab= "Expression Level")
-}
+            ylab= "Expression Level") }
 
-checkDiffExp("ENSG00000000938", dataFilt)
+checkDiffExp("ENSG00000000938", dff)
 
-
-#
+#==================================
 # cbind with diff number of rows
-#
-
-cbind.fill <- function(...){
+#==================================
+# cbind requires same number of rows, if not it will fail. This is to avoid that, and it will fill in with NA
+cbind.fill <- function(...) {
     nm <- list(...) 
     nm <- lapply(nm, as.matrix)
     n <- max(sapply(nm, nrow)) 
     do.call(cbind, lapply(nm, function (x) 
         rbind(x, matrix(, n-nrow(x), ncol(x))))) 
-}
+							}
 
-
-
+#==================================
+# biomaRt
+#==================================
 library("biomaRt")
 ensembl <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-gse7880.mapping <- getBM(attributes = c("ensembl_gene_id"), 
-                 values = gse7880.probs,
+mapping <- getBM(attributes = c("ensembl_gene_id"), 
+                 values = probs,
                  mart = ensembl)
 
 
 x = listAttributes(ensembl)
 x[grep("affy", x$description, ignore.case = T),]
 
-#mdata <- mdata[mdata$samp %in% colnames(cData2) , ]
+# mdata <- mdata[mdata$samp %in% colnames(cData2) , ]
 smapT$status2 <- ifelse(grepl("Rec", smapT$status, fixed = T), "Rec", "Tum")
 
 smapT$status2 <- ifelse(grepl("Non-Recurrent-NSCLC", smapT$status, fixed = T), "Tum", smapT$status2)    
@@ -360,12 +345,6 @@ detach("package:TCGAbiolinks", unload = TRUE, force = TRUE)
 packageVersion("TCGAbiolinks")
 
 
-
-col.to.keep <- c("Hugo_Symbol","Entrez_Gene_Id","Strand","Variant_Classification",
-                 "Variant_Type","dbSNP_RS","Tumor_Sample_Barcode",
-                 "Matched_Norm_Sample_Barcode","Mutation_Status","Tumor_Sample_UUID",
-                 "Matched_Norm_Sample_UUID","HGVSc","HGVSp","HGVSp_Short","all_effects",
-                 "Gene","Consequence")
 
 reader.maf.files <- function(fpath, numb){
     bname = strsplit(basename(fpath), split = ".", fixed = TRUE,)[[1]][1]
@@ -381,9 +360,9 @@ counter = 1
 maf.luad <- lapply(files, reader.maf.files)
 
 
-#
+#==================================
 # Converting UUID values to file names, 
-#
+#==================================
 
 manifest <- read.csv("TCGA_data/Methylation_betaValues/gdc_manifest.2024-03-19.txt",
                             header = T, sep = "\t")
@@ -430,49 +409,33 @@ ggplot(data = deg_dm, aes(x = Est_groupTumor, y = log2FoldChange)) +
                      stackratio=1.5, dotsize=1.2) + 
 
 
-
-
-# to negate the function in r
-"%ni%" <- Negate("%in%")
-
-
+#==================================
 # migrate R libraries, move R libraries, install R libraries
-
+#==================================
 # In original installation, get the non-default package list:
 save.pkg.list <- installed.packages()[is.na(installed.packages()[ , "Priority"]), 1]
 save(save.pkg.list, file="pkglist.Rdata")
 # If you want to use remove.packages() at this point it's fine. 
 # Or just delete their directories.
 
-
 load("pkglist.Rdata")
 install.packages(save.pkg.list)
 
-
-
-#library(pROC)
+#==================================
+# ROC curve in R
+#==================================
+library(pROC)
 
 roc.cg00074348 <- pROC::roc(data = betas.fs.2, 
 		response = "sampleType",
 		predictor = "cg00074348",
 		ret = c("roc", "coords", "all_coords"),
 		ci = TRUE, plot = TRUE)
+
 pROC::plot.roc(roc.cg00049664,
 	xlim=if(roc.cg00049664$percent){c(100, 0)} else{c(1, 0)},
 	ylim=if(roc.cg00049664$percent){c(0, 100)} else{c(0, 1)})
 
-
-
-# linearity check
-cor(betas2.fs[, c("cg00049664","cg04573550","cg09316122","cg19937938")])
-
-           cg00049664 cg04573550 cg09316122 cg19937938
-cg00049664  1.0000000  0.3400038  0.2347928  0.1977406
-cg04573550  0.3400038  1.0000000  0.4769692  0.4270619
-cg09316122  0.2347928  0.4769692  1.0000000  0.5971088
-cg19937938  0.1977406  0.4270619  0.5971088  1.0000000
-
-#+++++++++++++++++++++++++++++++++++ROC
 roc.cg <- pROC::roc(data = test, #betas2.fs, 
 		response = "sampleType",
 		predictor = "y_pred",
@@ -490,13 +453,9 @@ roc_df <- data.frame(
   labels=roc.cg$response, 
   scores=roc.cg$predictor)
 
-
-
-
-
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++
+#==================================
 # InfiniumMethylation lib to convert probe id to gene 
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++
+#==================================
 
 library(FDb.InfiniumMethylation.hg19)
 # list all the contents in the package
@@ -515,7 +474,7 @@ res2.annotated.sig.tss2 <- getNearestTSS(res2.annotated.sig.gene)
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Linear/logistic regression analysis For feature selection (LUAD only)
+# Linear/logistic regression analysis For feature selection
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 betaVal.regression <- t(betas2.cluster)
@@ -1488,4 +1447,5 @@ keep_one_column <- function(input_df, term){
   
   return (mat_col)
 }
+
 
