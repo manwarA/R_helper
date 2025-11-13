@@ -1,12 +1,16 @@
+library(stringr)
+library(dplyr)
+
+# This is for general history and commands list
+
+# select max value between two columns; pmax is parallel maximum
+common1$log10pvalue <- pmax(common1$log10pvalue.x, common1$log10pvalue.y)
 
 #Run this command in case many background files are open e.g. plots or pdf files
 dev.off()
 
 # to chek the type of individual coloumn types
 str(data_frame)
-
-# select max value between two columns; pmax is parallel maximum
-common1$log10pvalue <- pmax(common1$log10pvalue.x, common1$log10pvalue.y)
 
 
 samples <- colnames(lung.prot)
@@ -71,20 +75,13 @@ exampleSet <- ExpressionSet(assayData=as.matrix(mat.gse126848),
 length(test)
 test[[1]]
 
-#
-# Gastric data analysis
-#
-
-library(dplyr)
-
-#Note; significantly up proteins whose phospho are significantly up and down
 
 
 #set working directory
 setwd("E:\\manuscript_01\\r_dir_gastric")
 
 
-file <- data.table::fread("E:\\02_Proteom_GC_4samples\\NCC_N13T236_Proteome_KU_20161115\\OUTPUT\\N13T236_summed_tum_normal_refine_sam1.csv",
+file <- data.table::fread("summed_tum_normal_refine_sam1.csv",
 			sep = "\t", blank.lines.skip=TRUE, header = TRUE)
 
 output1 <- Sys.glob("E:\\02_Proteom_GC_4samples\\NCC_*_Proteome_KU_*\\OUTPUT\\")
@@ -176,9 +173,9 @@ x <- c(" lead", "trail ", " both ", " both and middle ", " _special")
 gsub_trim <- function (x) gsub("^\\s+|\\s+$", "", x)
 
 #<<<<<<<<< change the bahavior of warnings
-It may be useful to specify
-options(warn=2, error=recover)
-As mentioned by @plannapus, warn=2 will upgrade warnings to errors; error=recover will drop you into a debug/browser mode at the point where the warning (now upgraded to an error) occurred. (Use options(warn=0, error=NULL) to restore the original settings.)
+# It may be useful to specify
+# options(warn=2, error=recover)
+# As mentioned by @plannapus, warn=2 will upgrade warnings to errors; error=recover will drop you into a debug/browser mode at the point where the warning (now upgraded to an error) occurred. (Use options(warn=0, error=NULL) to restore the original settings.)
 
 
 des  <- test2[[1]]$description
@@ -1512,8 +1509,3 @@ keep_one_column <- function(input_df, term){
   
   return (mat_col)
 }
-
-#========================================
-
-install.packages(c("lubridate", "ggsurvfit", "gtsummary", "tidycmprsk"))
-devtools::install_github("zabore/condsurv")
