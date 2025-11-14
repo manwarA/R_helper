@@ -32,12 +32,12 @@ random_dist <- truncnorm::rtruncnorm(n=108, a=-0.68, b=0.82)#, mean=0.003, sd=0.
 wilcox.test(as.numeric(common2[1, 2:193]), random_dist, paired = F, alternative = "two.sided")
 
 #===================================
-# t-test rowwise
+# t-test rowwise (Welch t-test)
 #===================================
-
+# by default, R performs Welch Two Sample t-test
 x$stat <- sapply(1:nrow(x), function(i) 
 	t.test(	as.numeric(as.character(unlist(x[i,2:4]))), 
-		as.numeric(as.character(unlist(x[i,8:10])))
+			as.numeric(as.character(unlist(x[i,8:10])))
 			)[c("p.value")])
 
 #===================================
@@ -289,7 +289,14 @@ bitr2 <- function(df) {
     df
 }
 
-luad_target_genes <- luad_target_genes[! duplicated(luad_target_genes), ]
+# another way converting probeIDs to other IDs
+require(hgu133a.db)
+
+annotMaster1 <- select(hgu133a.db,
+  keys = keys(hgu133a.db, 'PROBEID'),
+  column = c('PROBEID',  'SYMBOL',  'ENTREZID', 'ENSEMBL'),
+  keytype = 'PROBEID')
+
 
 #==================================
 # boxplot
@@ -472,19 +479,18 @@ res.tss <- getNearestTranscript(hm450k.probe2gene)
 res2.annotated.sig.tss2 <- getNearestTSS(res2.annotated.sig.gene)
 
 
-
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#==================================
 # Linear/logistic regression analysis For feature selection
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#==================================
+#probes should be in column, samples in rows, and additional column for sample type
+library(FSinR) # feature selection in R
 
-betaVal.regression <- t(betas2.cluster)
-betaVal.regression2 <- merge(betaVal.regression, meta2, by.x=0, by.y = "rownames")
-rownames(betaVal.regression2) <- betaVal.regression2$Row.names
-betaVal.regression2$Row.names <- NULL
-
-library(FSinR)
-
-hybrid_search_method <- hybridSearchAlgorithm('LCC')
+# for hybrid search method, two evlaution methods are used:
+# (1) filter method
+# (2) wrapper method
+#
+# at the time of writing, only one algorithm was supported to perform hybrid search
+# hybrid_search_method <- hybridSearchAlgorithm('LCC')
 
 # Generates the first filter evaluation function (individual or set measure)
 f_evaluator <- filterEvaluator('determinationCoefficient')
@@ -493,243 +499,22 @@ f_evaluator <- filterEvaluator('determinationCoefficient')
 resamplingParams <- list(method = "cv", number = 10)
 fittingParams 	 <- list(preProc = c("center", "scale"), metric="Accuracy", tuneGrid = expand.grid(k = c(1:20)))
 w_evaluator <- wrapperEvaluator("knn", resamplingParams, fittingParams)
-#w_evaluator <- wrapperEvaluator('knn')
 
 # Generates the hybrid search function
 hybrid_search_method <- hybridSearchAlgorithm('LCC')
 
 # Runs the hybrid feature selection process
-featureSel <- hybridFeatureSelection(betaVal.regression2, "sampleType", hybrid_search_method, f_evaluator, w_evaluator)
-# featureSel identified "cg12483545" as the most contributing factor in Tumor/normal classification
+featureSel <- hybridFeatureSelection(df, "sampleType", hybrid_search_method, f_evaluator, w_evaluator)
 
-#library(pROC)
-
-roc.cg123835 <- pROC::roc(	data = betaVal.regression2, 
+roc.curve <- pROC::roc(	data = df, 
 		response = "sampleType",
 		predictor = "cg12483545",
 		ret = c("roc", "coords", "all_coords"),
 		ci = TRUE, plot = TRUE)
-plot.roc(roc.cg123835,
-	xlim=if(roc.cg123835$percent){c(100, 0)} else{c(1, 0)},
-	ylim=if(roc.cg123835$percent){c(0, 100)} else{c(0, 1)})
-	
-# Data: cg12483545 in 32 controls (sampleType 0) < 473 cases (sampleType 1).
-# Area under the curve: 0.9608
-# 95% CI: 0.9443-0.9772 (DeLong)
 
-
-#boxplot of feature CpG
-
-cg12483545.info <- betaVal.regression2[c("cg12483545", "sampleType")]
-cg12483545.info.N <- cg12483545.info[which(cg12483545.info$sampleType == 0), ]
-cg12483545.info.T <- cg12483545.info[which(cg12483545.info$sampleType == 1), ]
-
-boxplot(cg12483545.info.N$cg12483545, cg12483545.info.T$cg12483545, xlab = c("Normal", "Tumor"))
-
-t.test(cg12483545.info.N$cg12483545, cg12483545.info.T$cg12483545)
-
-#        Welch Two Sample t-test
-#
-#data:  cg12483545.info.N$cg12483545 and cg12483545.info.T$cg12483545
-#t = -23.358, df = 44.126, p-value < 2.2e-16
-#alternative hypothesis: true difference in means is not equal to 0
-#95 percent confidence interval:
-# -0.4878954 -0.4103971
-#sample estimates:
-#mean of x mean of y 
-#0.3917717 0.8409179 
-
-
-
-#
-# load the library
-#
-
-library(mlbench)
-library(caret)
-# calculate correlation matrix
-correlationMatrix <- cor(betaVal.regression2[,1:928])
-# summarize the correlation matrix
-print(correlationMatrix)
-# find attributes that are highly corrected (ideally >0.75)
-highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.5)
-# print indexes of highly correlated attributes
-print(highlyCorrelated)
-
-
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Linear/logistic regression analysis For feature selection with additoanl normal samples
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-#probes should be in column, samples in rows, and additional column for sample type
-#betaVal.fs.regression <- t(betaVal.fs)
-#betaVal.fs.regression <- merge(betaVal.fs.regression, meta3, by =0)
-#rownames(betaVal.fs.regression) <- betaVal.fs.regression$Row.names
-#betaVal.fs.regression$Row.names <- NULL
-
-
-# Runs the hybrid feature selection process
-# featureSel <- hybridFeatureSelection(betaVal.fs.regression, "sampleType", hybrid_search_method, f_evaluator, w_evaluator)
-# featureSel identified "cg00097146 / cg12483545" as the most contributing factor in Tumor/normal classification
-
-#library(pROC)
-
-roc.cg123835 <- pROC::roc(	data = betaVal.regression2, 
-		response = "sampleType",
-		predictor = "cg12483545",
-		ret = c("roc", "coords", "all_coords"),
-		ci = TRUE, plot = TRUE)
-plot.roc(roc.cg123835,
-	xlim=if(roc.cg123835$percent){c(100, 0)} else{c(1, 0)},
-	ylim=if(roc.cg123835$percent){c(0, 100)} else{c(0, 1)})
-	
-# Data: cg12483545 in 32 controls (sampleType 0) < 473 cases (sampleType 1).
-# Area under the curve: 0.9608
-# 95% CI: 0.9443-0.9772 (DeLong)
-
-
-#boxplot of feature CpG
-
-cg12483545.info <- betaVal.regression2[c("cg12483545", "sampleType")]
-cg12483545.info.N <- cg12483545.info[which(cg12483545.info$sampleType == 0), ]
-cg12483545.info.T <- cg12483545.info[which(cg12483545.info$sampleType == 1), ]
-
-boxplot(cg12483545.info.N$cg12483545, cg12483545.info.T$cg12483545, xlab = c("Normal", "Tumor"))
-
-t.test(cg12483545.info.N$cg12483545, cg12483545.info.T$cg12483545)
-
-#        Welch Two Sample t-test
-#
-#data:  cg12483545.info.N$cg12483545 and cg12483545.info.T$cg12483545
-#t = -23.358, df = 44.126, p-value < 2.2e-16
-#alternative hypothesis: true difference in means is not equal to 0
-#95 percent confidence interval:
-# -0.4878954 -0.4103971
-#sample estimates:
-#mean of x mean of y 
-#0.3917717 0.8409179 
-
-ls("package:enrichR")
-
-
-#bar.go2021 <- read.csv("figures_methylation_analysis//enrichR.txt", sep = "\t")
-#bar.go2021$GO.Biological.Process.2021..20230220. <- NULL
-#bar.go2021 <- bar.go2021[2:nrow(bar.go2021), ]
-#colnames(bar.go2021) <- bar.go2021[12, ] 
-
-hypo <- unique(deg.dm[which(deg.dm$CIMP == "CIMP-low"), "gene_name"])
-#Up <- unique(deg.dm[which(deg.dm$logFC > 1), "gene_name"])
-#doble <- c("Metazoa_SRP", "Y_RNA")
-#Up <- Up[!Up %in% doble]
-#Dn <- unique(deg.dm[which(deg.dm$logFC < -1), "gene_name"])
-
-intersect(Up, Dn)
-#[1] "Metazoa_SRP" "Y_RNA" 
-
-
-detach("package:pscl", unload=TRUE)
-#You can also use the unloadNamespace command, as in:
-unloadNamespace("pscl")
-
-# for GSEA using TERM2GENE
-m_t2g <- msigdbr(species = "Homo sapiens", category = "C7", subcategory = "IMMUNESIGDB") %>%
-         dplyr::select(gs_name, entrez_gene)
-
-
-# reading excel files
-readxl::read_excel
-
-library(reshape2)
-library(dplyr)
-
-dds_normCount2[, c(2:21)] %>% 
-    filter(row.names(dds_normCount2) == "ENSG00000132170") %>%
-    melt() %>% mutate("type" = c(rep("normal", 10), rep("obse", 10))) %>%
-    ggplot(aes(x = type, y = log2(value), fill = type)) + 
-    
-    geom_errorbar(stat = "summary", width = 0.1, color = "black", alpha = 1.5) +
-    stat_summary(geom = "point", fun = mean, color = "black") +
-    #geom_point(position = position_jitter(width = 0.1), shape = 18, size = 4) +
-    scale_color_brewer(palette = "Set2") +
-    
-    #geom_boxplot() + 
-    geom_dotplot(binaxis='y', stackdir='center',
-                 stackratio=1.5, dotsize=1.2) + 
-    theme_classic() + 
-    labs(title="PPARg",
-          x ="Type", y = "Normalized expression")
-
-
-ggsave(filename = "pparg_from_gse162653.pdf", plot = )
-
-
-#plot a barplot for top 10 enriched terms ordered by q-values
-ggplot(cpGO_df[1:10, ], aes(x = -log10(qvalue[1:10]), y =  reorder(Description[1:10], -log10(qvalue[1:10]) )) + 
-	geom_bar(stat = "identity") + 
-	theme_classic()
-
-
-# In case, log2fc values of 2 diff gene are same, small increase small increment
-#it will add 0.00001 to the second gene of the same log2fc value
-
-mydata <- mydata %>%
-		group_by(log2fc) %>% 
-		mutate(log2fc2 = log2fc + seq(0, by=0.00001, length.out= n()))
-
-
-# for heatmap
-heatmap ==> default or from base
-pheatmap
-pheatmap::pheatmap(exprs(Normalize2), 
-			annotation_col = ppp_p[, "response", drop = F] # This is the column/row annotation.
-			)
-
-
-ComplexHeatmap::Heatmap(as.matrix(hm.all2[1:10,]),
-                        na_col = "grey",
-                        column_dend_side = "top",
-                        col = circlize::colorRamp2(c(-3, 0, 3), c("Darkblue", "white", "red")),
-                        heatmap_legend_param = list(color_bar = "continuous"))
-
-
-# incase label overlapps in ggplot and ggrepel
-options(ggrepel.max.overlaps = 10)
-
-
-
-#library(pROC)
-
-roc.cg00074348 <- pROC::roc(data = betas.fs.2, 
-		response = "sampleType",
-		predictor = "cg00074348",
-		ret = c("roc", "coords", "all_coords"),
-		ci = TRUE, plot = TRUE)
-pROC::plot.roc(roc.cg00049664,
-	xlim=if(roc.cg00049664$percent){c(100, 0)} else{c(1, 0)},
-	ylim=if(roc.cg00049664$percent){c(0, 100)} else{c(0, 1)})
-
-
-
-# linearity check
-cor(betas2.fs[, c("cg00049664","cg04573550","cg09316122","cg19937938")])
-
-           cg00049664 cg04573550 cg09316122 cg19937938
-cg00049664  1.0000000  0.3400038  0.2347928  0.1977406
-cg04573550  0.3400038  1.0000000  0.4769692  0.4270619
-cg09316122  0.2347928  0.4769692  1.0000000  0.5971088
-cg19937938  0.1977406  0.4270619  0.5971088  1.0000000
-
-#+++++++++++++++++++++++++++++++++++ROC
-roc.cg <- pROC::roc(data = test, #betas2.fs, 
-		response = "sampleType",
-		predictor = "y_pred",
-		ret = c("roc", "coords", "all_coords"),
-		ci = TRUE, plot = TRUE)
-
-pROC::plot.roc(roc.cg,
-	xlim=if(roc.cg$percent){c(100, 0)} else{c(0, 1)},
-	ylim=if(roc.cg$percent){c(100, 0)} else{c(0, 1)})
-
+plot.roc(roc.curve,
+	xlim=if(roc.curve$percent){c(100, 0)} else{c(1, 0)},
+	ylim=if(roc.curve$percent){c(0, 100)} else{c(0, 1)})
 
 roc_df <- data.frame(
   TPR=rev(roc.cg$sensitivities), 
@@ -737,199 +522,103 @@ roc_df <- data.frame(
   labels=roc.cg$response, 
   scores=roc.cg$predictor)
 
-
-
-
-
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++
-# InfiniumMethylation lib to convert probe id to gene 
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-library(FDb.InfiniumMethylation.hg19)
-# list all the contents in the package
-ls('package:FDb.InfiniumMethylation.hg19')
- [1] "FDb.InfiniumMethylation.hg19" "get27k"                      
- [3] "get450k"                      "getNearest"                  
- [5] "getNearestGene"               "getNearestTranscript"        
- [7] "getNearestTSS"                "getPlatform"                 
- [9] "hm27ToHg19"                   "lift27kToHg19"     
-
-hm450 <- get450k()
-hm450k.probe2gene <- hm450[res$Probe_ID]
-res.tss <- getNearestTranscript(hm450k.probe2gene)
-res2.annotated.sig.tss2 <- getNearestTSS(res2.annotated.sig.gene)
-
-
-
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Linear/logistic regression analysis For feature selection (LUAD only)
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-betaVal.regression <- t(betas2.cluster)
-betaVal.regression2 <- merge(betaVal.regression, meta2, by.x=0, by.y = "rownames")
-rownames(betaVal.regression2) <- betaVal.regression2$Row.names
-betaVal.regression2$Row.names <- NULL
-
-library(FSinR)
-
-hybrid_search_method <- hybridSearchAlgorithm('LCC')
-
-# Generates the first filter evaluation function (individual or set measure)
-f_evaluator <- filterEvaluator('determinationCoefficient')
-
-# Generates the second wrapper evaluation function (mandatory set measure)
-resamplingParams <- list(method = "cv", number = 10)
-fittingParams 	 <- list(preProc = c("center", "scale"), metric="Accuracy", tuneGrid = expand.grid(k = c(1:20)))
-w_evaluator <- wrapperEvaluator("knn", resamplingParams, fittingParams)
-#w_evaluator <- wrapperEvaluator('knn')
-
-# Generates the hybrid search function
-hybrid_search_method <- hybridSearchAlgorithm('LCC')
-
-# Runs the hybrid feature selection process
-featureSel <- hybridFeatureSelection(betaVal.regression2, "sampleType", hybrid_search_method, f_evaluator, w_evaluator)
-# featureSel identified "cg12483545" as the most contributing factor in Tumor/normal classification
-
-#library(pROC)
-
-roc.cg123835 <- pROC::roc(	data = betaVal.regression2, 
-		response = "sampleType",
-		predictor = "cg12483545",
-		ret = c("roc", "coords", "all_coords"),
-		ci = TRUE, plot = TRUE)
-plot.roc(roc.cg123835,
-	xlim=if(roc.cg123835$percent){c(100, 0)} else{c(1, 0)},
-	ylim=if(roc.cg123835$percent){c(0, 100)} else{c(0, 1)})
-	
-# Data: cg12483545 in 32 controls (sampleType 0) < 473 cases (sampleType 1).
-# Area under the curve: 0.9608
-# 95% CI: 0.9443-0.9772 (DeLong)
-
-
-#boxplot of feature CpG
-
-cg12483545.info <- betaVal.regression2[c("cg12483545", "sampleType")]
-cg12483545.info.N <- cg12483545.info[which(cg12483545.info$sampleType == 0), ]
-cg12483545.info.T <- cg12483545.info[which(cg12483545.info$sampleType == 1), ]
-
-boxplot(cg12483545.info.N$cg12483545, cg12483545.info.T$cg12483545, xlab = c("Normal", "Tumor"))
-
-t.test(cg12483545.info.N$cg12483545, cg12483545.info.T$cg12483545)
-
-#        Welch Two Sample t-test
-#
-#data:  cg12483545.info.N$cg12483545 and cg12483545.info.T$cg12483545
-#t = -23.358, df = 44.126, p-value < 2.2e-16
-#alternative hypothesis: true difference in means is not equal to 0
-#95 percent confidence interval:
-# -0.4878954 -0.4103971
-#sample estimates:
-#mean of x mean of y 
-#0.3917717 0.8409179 
-
-
-
-#
-# load the library
-#
-
+#==================================
+# 
+#==================================
 library(mlbench)
 library(caret)
-# calculate correlation matrix
-correlationMatrix <- cor(betaVal.regression2[,1:928])
-# summarize the correlation matrix
-print(correlationMatrix)
-# find attributes that are highly corrected (ideally >0.75)
-highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.5)
-# print indexes of highly correlated attributes
-print(highlyCorrelated)
 
-
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Linear/logistic regression analysis For feature selection with additoanl normal samples
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-#probes should be in column, samples in rows, and additional column for sample type
-#betaVal.fs.regression <- t(betaVal.fs)
-#betaVal.fs.regression <- merge(betaVal.fs.regression, meta3, by =0)
-#rownames(betaVal.fs.regression) <- betaVal.fs.regression$Row.names
-#betaVal.fs.regression$Row.names <- NULL
-
-
-# Runs the hybrid feature selection process
-# featureSel <- hybridFeatureSelection(betaVal.fs.regression, "sampleType", hybrid_search_method, f_evaluator, w_evaluator)
-# featureSel identified "cg00097146 / cg12483545" as the most contributing factor in Tumor/normal classification
-
-#library(pROC)
-
-roc.cg123835 <- pROC::roc(	data = betaVal.regression2, 
-		response = "sampleType",
-		predictor = "cg12483545",
-		ret = c("roc", "coords", "all_coords"),
-		ci = TRUE, plot = TRUE)
-plot.roc(roc.cg123835,
-	xlim=if(roc.cg123835$percent){c(100, 0)} else{c(1, 0)},
-	ylim=if(roc.cg123835$percent){c(0, 100)} else{c(0, 1)})
-	
-# Data: cg12483545 in 32 controls (sampleType 0) < 473 cases (sampleType 1).
-# Area under the curve: 0.9608
-# 95% CI: 0.9443-0.9772 (DeLong)
-
-
-#boxplot of feature CpG
-
-cg12483545.info <- betaVal.regression2[c("cg12483545", "sampleType")]
-cg12483545.info.N <- cg12483545.info[which(cg12483545.info$sampleType == 0), ]
-cg12483545.info.T <- cg12483545.info[which(cg12483545.info$sampleType == 1), ]
-
-boxplot(cg12483545.info.N$cg12483545, cg12483545.info.T$cg12483545, xlab = c("Normal", "Tumor"))
-
-t.test(cg12483545.info.N$cg12483545, cg12483545.info.T$cg12483545)
-
-#        Welch Two Sample t-test
-#
-#data:  cg12483545.info.N$cg12483545 and cg12483545.info.T$cg12483545
-#t = -23.358, df = 44.126, p-value < 2.2e-16
-#alternative hypothesis: true difference in means is not equal to 0
-#95 percent confidence interval:
-# -0.4878954 -0.4103971
-#sample estimates:
-#mean of x mean of y 
-#0.3917717 0.8409179 
-
+#================================== 
+# list function in R package
+#==================================
 ls("package:enrichR")
 
 
-#bar.go2021 <- read.csv("figures_methylation_analysis//enrichR.txt", sep = "\t")
-#bar.go2021$GO.Biological.Process.2021..20230220. <- NULL
-#bar.go2021 <- bar.go2021[2:nrow(bar.go2021), ]
-#colnames(bar.go2021) <- bar.go2021[12, ] 
-
-hypo <- unique(deg.dm[which(deg.dm$CIMP == "CIMP-low"), "gene_name"])
-#Up <- unique(deg.dm[which(deg.dm$logFC > 1), "gene_name"])
-#doble <- c("Metazoa_SRP", "Y_RNA")
-#Up <- Up[!Up %in% doble]
-#Dn <- unique(deg.dm[which(deg.dm$logFC < -1), "gene_name"])
 
 intersect(Up, Dn)
-#[1] "Metazoa_SRP" "Y_RNA" 
+# "Metazoa_SRP" "Y_RNA" 
 
-
+#================================== 
+# detach a package in R
+#==================================
 detach("package:pscl", unload=TRUE)
 #You can also use the unloadNamespace command, as in:
 unloadNamespace("pscl")
 
 
+# reading excel files
+readxl::read_excel
+
+#================================== 
+# ggplot in R
+#==================================
+library(reshape2)
+library(dplyr)
+
+dds_normCount2[, c(2:21)] %>% 
+    filter(row.names(dds_normCount2) == "ENSG00000132170") %>%
+    melt() %>% mutate("type" = c(rep("normal", 10), rep("obse", 10))) %>%
+    ggplot(aes(x = type, y = log2(value), fill = type)) + 
+    geom_errorbar(stat = "summary", width = 0.1, color = "black", alpha = 1.5) +
+    stat_summary(geom = "point", fun = mean, color = "black") +
+    #geom_point(position = position_jitter(width = 0.1), shape = 18, size = 4) +
+    scale_color_brewer(palette = "Set2") +
+    #geom_boxplot() + 
+    geom_dotplot(binaxis='y', stackdir='center', stackratio=1.5, dotsize=1.2) + 
+    theme_classic() + 
+    labs(title="PPARg",
+         x ="Type", 
+		 y = "Normalized expression")
+# save figure
+ggsave(filename = "pparg_from_gse162653.pdf", plot = )
+
+#plot a barplot for top 10 enriched terms ordered by q-values
+ggplot(cpGO_df[1:10, ], aes(x = -log10(qvalue[1:10]), y =  reorder(Description[1:10], -log10(qvalue[1:10]) )) + 
+	geom_bar(stat = "identity") + 
+	theme_classic()
+
+# incase label overlapps in ggplot and ggrepel
+options(ggrepel.max.overlaps = 10)
+
+# In case, log2fc values of 2 diff gene are same, small increase small increment
+#it will add 0.00001 to the second gene of the same log2fc value
+mydata <- mydata %>%
+		group_by(log2fc) %>% 
+		mutate(log2fc2 = log2fc + seq(0, by=0.00001, length.out= n()))
+
+#================================== 
+# Heatmap in R
+#==================================
+
+# for heatmap
+heatmap ==> default or from base
+
+pheatmap::pheatmap(exprs(Normalize2), 
+			annotation_col = ppp_p[, "response", drop = F] # This is the column/row annotation.
+			)
+
+ComplexHeatmap::Heatmap(as.matrix(hm.all2[1:10,]),
+                        na_col = "grey",
+                        column_dend_side = "top",
+                        col = circlize::colorRamp2(c(-3, 0, 3), c("Darkblue", "white", "red")),
+                        heatmap_legend_param = list(color_bar = "continuous"))
+
+#==================================
+#
+#==================================
 # convert character to numeric in data frame
-raw.ad[] <- sapply(raw.ad, as.numeric) ; it preserves both col names and row names
+raw.ad[] <- sapply(raw.ad, as.numeric) ; it preserves both col names and row names, plus it requires [] on left side
 
 
+#==================================
+# nested ifelse
+#==================================
 
+# ifelse() can be nested in many ways:
 
-ifelse() can be nested in many ways:
-
-ifelse(<condition>, <yes>, ifelse(<condition>, <yes>, <no>)
-	)
+ifelse(<condition>, <yes>, 
+	   ifelse(<condition>, <yes>, <no>)
+		)
 
 ifelse(<condition>, ifelse(<condition>, <yes>, <no>), <no>)
 
@@ -941,20 +630,15 @@ ifelse(<condition>,
 ifelse(<condition>, <yes>, 
        ifelse(<condition>, <yes>, 
               ifelse(<condition>, <yes>, <no>)
-             )
-       )
+             ) )
 
 
-# string split or you can remove the remaining part from ENSEMBL name
-
-rownames(metabolic_cohort.complete.Sign) <- sub("\\..*", "", rownames(metabolic_cohort.complete.Sign))
+# string split or you can remove the remaining part from ENSEMBL name, the version of ensembl id such as ENSG0000000000012.3. Remove .3, otherwise megeing will be difficult.
+rownames(df) <- sub("\\..*", "", rownames(df))
 
 strsplit use case
-
 If you need to extract the first (or nth) entry from each split, use:
-
 word <- c('apple-orange-strawberry','chocolate')
-
 sapply(strsplit(word,"-"), `[`, 1)
 #[1] "apple"     "chocolate"
 
@@ -977,9 +661,9 @@ df[sapply(df, nlevels) > 1]
 exp(mean(log(x))) # this and the foloowing function is same
 
 "geometric.mean" <- 
-function(x,na.rm=TRUE)
-{ 
-exp(mean(log(x),na.rm=na.rm)) }
+function(x, na.rm=TRUE) { 
+		exp(mean(log(x),na.rm=na.rm))
+						}
 
 
 # compare all files in the list
@@ -991,11 +675,11 @@ allFiles <- lapply(listOfFiles, function(x) readr::read_tsv(x,
                                                 trim_ws = TRUE)
 
 
-for annotating hgu133plus2 Affymatrix data set
-#+ BiocManager::install("hgu133plus2probe") for annotation
-#+ BiocManager::install("gcrma")
-#+ BiocManager::install("hgu133plus2cdf")
-#+ BiocManager::install("hgu133plus2.db")
+# for annotating hgu133plus2 Affymatrix data set
+# BiocManager::install("hgu133plus2probe") for annotation
+# BiocManager::install("gcrma")
+# BiocManager::install("hgu133plus2cdf")
+# BiocManager::install("hgu133plus2.db")
 
 # for geo data
 gset <- getGEO("GSE12056", GSEMatrix =TRUE, getGPL=FALSE)
@@ -1003,21 +687,9 @@ if (length(gset) > 1) idx <- grep("GPL570", attr(gset, "names")) else idx <- 1
 gset <- gset[[idx]]
 
 
-# converting probeIDs to other IDs
-require(hgu133a.db)
+# mapping between human genome and illumine platforms (reference: https://github.com/AlexsLemonade/refinebio/issues/232)
 
-annotMaster1 <- select(hgu133a.db,
-  keys = keys(hgu133a.db, 'PROBEID'),
-  column = c('PROBEID',  'SYMBOL',  'ENTREZID', 'ENSEMBL'),
-  keytype = 'PROBEID')
-
-dim(annotMaster1)
-[1] 28437     4
-
-
->> mapping between human genome and illumine platforms (reference: https://github.com/AlexsLemonade/refinebio/issues/232)
-
-I've just gone through the human platforms. Here's a Bioconductor package to platform name mapping that I think should work:
+# I've just gone through the human platforms. Here's a Bioconductor package to platform name mapping that I think should work:
 
 illuminaHumanv1.db: Illumina Human-6 v1.0, Illumina HumanRef-8 v1.0
 illuminaHumanv2.db: Illumina Human-6 V2.0, Illumina HumanRef-8 v2.0
@@ -1025,16 +697,20 @@ illuminaHumanv3.db: Illumina HumanHT-12 V3.0, Illumina HumanRef-8 v3.0, Illumina
 illuminaHumanv4.db: Illumina HumanHT-12 V4.0
 
 
-
+#==================================
+# Install new fonts in R
+#==================================
 # to install new fonts in R: have to done all three steps
 library(extrafont)
 font_import()
 loadfonts(device = "win")
 
 
+#==================================
+# PCA
+#==================================
+
 # PCA and plot
-
-
 # quality check for normalized data
   mdaPcaRma <- Biobase::exprs(mdaDataRma)
   
@@ -1068,71 +744,6 @@ loadfonts(device = "win")
 # install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezgcdf_22.0.0.tar.gz", type="source", repos=NULL)
 # install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezgprobe_22.0.0.tar.gz", type="source", repos=NULL)
 # install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezg.db_22.0.0.tar.gz", type="source", repos=NULL)
-
-
-
-#library(pROC)
-
-roc.cg00074348 <- pROC::roc(data = betas.fs.2, 
-		response = "sampleType",
-		predictor = "cg00074348",
-		ret = c("roc", "coords", "all_coords"),
-		ci = TRUE, plot = TRUE)
-pROC::plot.roc(roc.cg00049664,
-	xlim=if(roc.cg00049664$percent){c(100, 0)} else{c(1, 0)},
-	ylim=if(roc.cg00049664$percent){c(0, 100)} else{c(0, 1)})
-
-
-
-# linearity check
-cor(betas2.fs[, c("cg00049664","cg04573550","cg09316122","cg19937938")])
-
-           cg00049664 cg04573550 cg09316122 cg19937938
-cg00049664  1.0000000  0.3400038  0.2347928  0.1977406
-cg04573550  0.3400038  1.0000000  0.4769692  0.4270619
-cg09316122  0.2347928  0.4769692  1.0000000  0.5971088
-cg19937938  0.1977406  0.4270619  0.5971088  1.0000000
-
-#+++++++++++++++++++++++++++++++++++ROC
-roc.cg <- pROC::roc(data = test, #betas2.fs, 
-		response = "sampleType",
-		predictor = "y_pred",
-		ret = c("roc", "coords", "all_coords"),
-		ci = TRUE, plot = TRUE)
-
-pROC::plot.roc(roc.cg,
-	xlim=if(roc.cg$percent){c(100, 0)} else{c(0, 1)},
-	ylim=if(roc.cg$percent){c(100, 0)} else{c(0, 1)})
-
-
-roc_df <- data.frame(
-  TPR=rev(roc.cg$sensitivities), 
-  FPR=rev(1 - roc.cg$specificities), 
-  labels=roc.cg$response, 
-  scores=roc.cg$predictor)
-
-
-
-
-
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++
-# InfiniumMethylation lib to convert probe id to gene 
-#+++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-library(FDb.InfiniumMethylation.hg19)
-# list all the contents in the package
-ls('package:FDb.InfiniumMethylation.hg19')
- [1] "FDb.InfiniumMethylation.hg19" "get27k"                      
- [3] "get450k"                      "getNearest"                  
- [5] "getNearestGene"               "getNearestTranscript"        
- [7] "getNearestTSS"                "getPlatform"                 
- [9] "hm27ToHg19"                   "lift27kToHg19"     
-
-hm450 <- get450k()
-hm450k.probe2gene <- hm450[res$Probe_ID]
-res.tss <- getNearestTranscript(hm450k.probe2gene)
-res2.annotated.sig.tss2 <- getNearestTSS(res2.annotated.sig.gene)
-
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1415,8 +1026,8 @@ res <- res[!is.na(res$P),]
 res
 
 #=========================================
-add snippet to the RStudio
-
+# add snippet to the RStudio
+#=========================================
 copy --> pp --> shift-tab
 
 pp is snippet shortcut in R studio; it has already been added.
@@ -1447,5 +1058,6 @@ keep_one_column <- function(input_df, term){
   
   return (mat_col)
 }
+
 
 
