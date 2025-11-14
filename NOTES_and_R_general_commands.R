@@ -2,19 +2,29 @@ library(stringr)
 library(dplyr)
 
 # This is for general history and commands list
+#===================================
+# General
+#===================================
+# data.table fread is faster than regular read.csv
+file <- data.table::fread("file.csv",
+						  sep = "\t", 
+						  blank.lines.skip=TRUE, 
+						  header = TRUE)
+#Run this command in case many background files are open e.g. plots or pdf files
+dev.off()
 
 # select max value between two columns; pmax is parallel maximum
 common1$log10pvalue <- pmax(common1$log10pvalue.x, common1$log10pvalue.y)
 
-#Run this command in case many background files are open e.g. plots or pdf files
-dev.off()
-
 # to chek the type of individual coloumn types
 str(data_frame)
 
+# to create random distribution with lower bound (-0.68) and upper bound (0.82)
+random_dist <- truncnorm::rtruncnorm(n=108, a=-0.68, b=0.82)#, mean=0.003, sd=0.292)
 
-samples <- colnames(lung.prot)
-library(stringr)
+#===================================
+# No idea
+#===================================
 samples <- gsub("(?<=QC1)[^;]*", "", samples, perl = TRUE)
 samples2 <- samples[2:973]
 samples2 <- grepl("Unshared", samples2)
@@ -25,20 +35,17 @@ samples2 <- str_remove(samples2, "Unshared.Log.QC2_LateStageTumor_pool.QC1")
 samples2 <- samples2[nzchar(samples2)]
 
 
-# to create random distribution with lower bound (-0.68) and upper bound (0.82)
-random_dist <- truncnorm::rtruncnorm(n=108, a=-0.68, b=0.82)#, mean=0.003, sd=0.292)
-
-# apply Wilcoxon test (this does not assume normal distribution)
-wilcox.test(as.numeric(common2[1, 2:193]), random_dist, paired = F, alternative = "two.sided")
-
 #===================================
-# t-test rowwise (Welch t-test)
+# t-test rowwise (Welch t-test) and STATISTICAL tests
 #===================================
 # by default, R performs Welch Two Sample t-test
 x$stat <- sapply(1:nrow(x), function(i) 
 	t.test(	as.numeric(as.character(unlist(x[i,2:4]))), 
 			as.numeric(as.character(unlist(x[i,8:10])))
 			)[c("p.value")])
+
+# apply Wilcoxon test (this does not assume normal distribution)
+wilcox.test(as.numeric(common2[1, 2:193]), random_dist, paired = F, alternative = "two.sided")
 
 #===================================
 # Limma for gene expression
@@ -58,36 +65,38 @@ mtstat <- ebayes[["t"]][, 2]
 # top significant genes
 tab <- topTable(ebayes, coef=2, adjust="fdr", n=10)
 
-				 
+#===================================
+# GEO related
+#===================================						 
 # create expression set for GEOquery 
 # it was a test, but the GEO data is very unpredictable/messsy
 # making it really hard to convert it into ExpressionSet
 
-eset <- ExpressionSet(assayData = as.matrix(mat.gse126848),
-                      phenoData =  Biobase::AnnotatedDataFrame(phenoData(test2[[1]])))
+eset <- ExpressionSet(assayData = as.matrix(mat),
+                      phenoData =  Biobase::AnnotatedDataFrame(phenoData(df[[1]])))
 
 phenoData <- new("AnnotatedDataFrame",
                  data=pData(test2[[1]])) 
                  #varMetadata=metadata)                      
 
-exampleSet <- ExpressionSet(assayData=as.matrix(mat.gse126848),
+exampleSet <- ExpressionSet(assayData=as.matrix(mat),
                                phenoData=phenoData,
                                experimentData=experimentData(test2[[1]]),
                                annotation="hgu95av2")
 
-# data.table fread is faster than regular read.csv
-file <- data.table::fread("summed_tum_normal_refine_sam1.csv",
-			sep = "\t", blank.lines.skip=TRUE, header = TRUE)
-
-output1 <- Sys.glob("NCC_*_Proteome_KU_*\\OUTPUT\\")
-
-# pattern based matching and retreiving the data
-paths <- list.files(output1, 
-					pattern= glob2rx("*summed_tum_normal_refine*.csv$*"),
-                    full.names=T, recursive=T)
-
+#===================================
+# Process multiple files
+#===================================
 # Make a function to process each file, file name or identifier has to be appended to the respective columns. 
 # after that, using sapply, this function can be used to all the files.
+
+# pattern based matching and retreiving the data
+output1 <- Sys.glob("NCC_*_Proteome_KU_*\\OUTPUT\\")
+paths <- list.files(output1, 
+					pattern= glob2rx("*summed_tum_normal_refine*.csv$*"),
+                    full.names=T, 
+					recursive=T)
+				 
 processFile <- function(f) {
   bname = strsplit(basename(f), '_')[[1]][1]
   df = data.table::fread(f, 
@@ -119,7 +128,7 @@ result <- sapply(paths, processFile)
 merged_output <- Reduce(function(x, y) merge(x, y, all.x = TRUE, by = c("uniprot"), 
                                             allow.cartesian=TRUE), result[1:40])
 
-# purr base solution
+# purr based solution
 list_of_data %>% purrr::reduce(left_join, by = "row_names") # for purr based solution to merge multiple dataframes; but it needs a unique col name (e.g. row_names) in each df.
 
 # data table approach,let see how efficient it is
@@ -903,3 +912,4 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
