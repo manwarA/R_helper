@@ -746,163 +746,8 @@ loadfonts(device = "win")
 # install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezg.db_22.0.0.tar.gz", type="source", repos=NULL)
 
 
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Linear/logistic regression analysis For feature selection (LUAD only)
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-betaVal.regression <- t(betas2.cluster)
-betaVal.regression2 <- merge(betaVal.regression, meta2, by.x=0, by.y = "rownames")
-rownames(betaVal.regression2) <- betaVal.regression2$Row.names
-betaVal.regression2$Row.names <- NULL
-
-library(FSinR)
-
-hybrid_search_method <- hybridSearchAlgorithm('LCC')
-
-# Generates the first filter evaluation function (individual or set measure)
-f_evaluator <- filterEvaluator('determinationCoefficient')
-
-# Generates the second wrapper evaluation function (mandatory set measure)
-resamplingParams <- list(method = "cv", number = 10)
-fittingParams 	 <- list(preProc = c("center", "scale"), metric="Accuracy", tuneGrid = expand.grid(k = c(1:20)))
-w_evaluator <- wrapperEvaluator("knn", resamplingParams, fittingParams)
-#w_evaluator <- wrapperEvaluator('knn')
-
-# Generates the hybrid search function
-hybrid_search_method <- hybridSearchAlgorithm('LCC')
-
-# Runs the hybrid feature selection process
-featureSel <- hybridFeatureSelection(betaVal.regression2, "sampleType", hybrid_search_method, f_evaluator, w_evaluator)
-# featureSel identified "cg12483545" as the most contributing factor in Tumor/normal classification
-
-#library(pROC)
-
-roc.cg123835 <- pROC::roc(	data = betaVal.regression2, 
-		response = "sampleType",
-		predictor = "cg12483545",
-		ret = c("roc", "coords", "all_coords"),
-		ci = TRUE, plot = TRUE)
-plot.roc(roc.cg123835,
-	xlim=if(roc.cg123835$percent){c(100, 0)} else{c(1, 0)},
-	ylim=if(roc.cg123835$percent){c(0, 100)} else{c(0, 1)})
-	
-# Data: cg12483545 in 32 controls (sampleType 0) < 473 cases (sampleType 1).
-# Area under the curve: 0.9608
-# 95% CI: 0.9443-0.9772 (DeLong)
 
 
-#boxplot of feature CpG
-
-cg12483545.info <- betaVal.regression2[c("cg12483545", "sampleType")]
-cg12483545.info.N <- cg12483545.info[which(cg12483545.info$sampleType == 0), ]
-cg12483545.info.T <- cg12483545.info[which(cg12483545.info$sampleType == 1), ]
-
-boxplot(cg12483545.info.N$cg12483545, cg12483545.info.T$cg12483545, xlab = c("Normal", "Tumor"))
-
-t.test(cg12483545.info.N$cg12483545, cg12483545.info.T$cg12483545)
-
-#        Welch Two Sample t-test
-#
-#data:  cg12483545.info.N$cg12483545 and cg12483545.info.T$cg12483545
-#t = -23.358, df = 44.126, p-value < 2.2e-16
-#alternative hypothesis: true difference in means is not equal to 0
-#95 percent confidence interval:
-# -0.4878954 -0.4103971
-#sample estimates:
-#mean of x mean of y 
-#0.3917717 0.8409179 
-
-
-
-#
-# load the library
-#
-
-library(mlbench)
-library(caret)
-# calculate correlation matrix
-correlationMatrix <- cor(betaVal.regression2[,1:928])
-# summarize the correlation matrix
-print(correlationMatrix)
-# find attributes that are highly corrected (ideally >0.75)
-highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.5)
-# print indexes of highly correlated attributes
-print(highlyCorrelated)
-
-
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Linear/logistic regression analysis For feature selection with additoanl normal samples
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-#probes should be in column, samples in rows, and additional column for sample type
-#betaVal.fs.regression <- t(betaVal.fs)
-#betaVal.fs.regression <- merge(betaVal.fs.regression, meta3, by =0)
-#rownames(betaVal.fs.regression) <- betaVal.fs.regression$Row.names
-#betaVal.fs.regression$Row.names <- NULL
-
-
-# Runs the hybrid feature selection process
-# featureSel <- hybridFeatureSelection(betaVal.fs.regression, "sampleType", hybrid_search_method, f_evaluator, w_evaluator)
-# featureSel identified "cg00097146 / cg12483545" as the most contributing factor in Tumor/normal classification
-
-#library(pROC)
-
-roc.cg123835 <- pROC::roc(	data = betaVal.regression2, 
-		response = "sampleType",
-		predictor = "cg12483545",
-		ret = c("roc", "coords", "all_coords"),
-		ci = TRUE, plot = TRUE)
-plot.roc(roc.cg123835,
-	xlim=if(roc.cg123835$percent){c(100, 0)} else{c(1, 0)},
-	ylim=if(roc.cg123835$percent){c(0, 100)} else{c(0, 1)})
-	
-# Data: cg12483545 in 32 controls (sampleType 0) < 473 cases (sampleType 1).
-# Area under the curve: 0.9608
-# 95% CI: 0.9443-0.9772 (DeLong)
-
-
-#boxplot of feature CpG
-
-cg12483545.info <- betaVal.regression2[c("cg12483545", "sampleType")]
-cg12483545.info.N <- cg12483545.info[which(cg12483545.info$sampleType == 0), ]
-cg12483545.info.T <- cg12483545.info[which(cg12483545.info$sampleType == 1), ]
-
-boxplot(cg12483545.info.N$cg12483545, cg12483545.info.T$cg12483545, xlab = c("Normal", "Tumor"))
-
-t.test(cg12483545.info.N$cg12483545, cg12483545.info.T$cg12483545)
-
-#        Welch Two Sample t-test
-#
-#data:  cg12483545.info.N$cg12483545 and cg12483545.info.T$cg12483545
-#t = -23.358, df = 44.126, p-value < 2.2e-16
-#alternative hypothesis: true difference in means is not equal to 0
-#95 percent confidence interval:
-# -0.4878954 -0.4103971
-#sample estimates:
-#mean of x mean of y 
-#0.3917717 0.8409179 
-
-ls("package:enrichR")
-
-
-#bar.go2021 <- read.csv("figures_methylation_analysis//enrichR.txt", sep = "\t")
-#bar.go2021$GO.Biological.Process.2021..20230220. <- NULL
-#bar.go2021 <- bar.go2021[2:nrow(bar.go2021), ]
-#colnames(bar.go2021) <- bar.go2021[12, ] 
-
-hypo <- unique(deg.dm[which(deg.dm$CIMP == "CIMP-low"), "gene_name"])
-#Up <- unique(deg.dm[which(deg.dm$logFC > 1), "gene_name"])
-#doble <- c("Metazoa_SRP", "Y_RNA")
-#Up <- Up[!Up %in% doble]
-#Dn <- unique(deg.dm[which(deg.dm$logFC < -1), "gene_name"])
-
-intersect(Up, Dn)
-#[1] "Metazoa_SRP" "Y_RNA" 
-
-
-detach("package:pscl", unload=TRUE)
-#You can also use the unloadNamespace command, as in:
-unloadNamespace("pscl")
 
 
 # get the expression set from the GEO dataset
@@ -915,18 +760,7 @@ gse109211 <- gse109211[[idx]]
 # write.table(biomaRt::listAttributes(mart), file = "biomaRt_attributes_list.txt",
 #             sep = "\t", quote = F)
 
-
-head(select(hgu133plus2.db, keys = keys(hgu133plus2.db), 
-          keytype = "PROBEID", 
-          columns = c("MAP", "REFSEQ", "PROSITE", "REFSEQ")))
-
-
-
-source("C:\\Users\\MuhammadAyazAnwar\\Desktop\\RWorkingDir\\ScriptsIIT\\plotRLE.R")
-plotRLE(Normalize2, fsave = F)
-
-
-#+ convert series matrix (expression set) to annotatedDataFrame or ExpressionFeatureSet
+# convert series matrix (expression set) to annotatedDataFrame or ExpressionFeatureSet
 tADF <- AnnotatedDataFrame(#data = exprs(gse109),
                    pData(phenoData(gse109)))
                    
@@ -958,9 +792,6 @@ gse190_elist$E <- gse109_data_exp
 gse190_elist$targets <- targetinfo
 gse190_elist$genes <- wdgs[[1]]
 gse190_elist$other$Detection <- gse109_data_pvalue
-
-# copy to Linux server scp
-sudo scp -rp ../../../../../pythonCode/pytorch_test.py anwar@172.16.10.20:/home/PredCanTherapy/pythonCode
 
 
 # version of R
@@ -994,15 +825,9 @@ eCelData <- efs
 validObject(eCelData)
 
 
-# nested ifelse in r
-# it does not work as expected
-ifelse(grepl("Stage IV", pheno_data$ajcc_pathologic_stage, fixed = T, perl = F),   1,
-       ifelse(grepl("III", pheno_data$ajcc_pathologic_stage, fixed = T, perl = F),  2,
-              ifelse(grepl("Stage II", pheno_data$ajcc_pathologic_stage, fixed = T, perl = F), 3,
-                     ifelse(grepl("Stage I", pheno_data$ajcc_pathologic_stage, fixed = T, perl = F),  4, NA))))
-
-
-
+#=========================================
+# Survival analysis
+#=========================================
 # survival analysis parallel
 library(survival)
 library(RegParallel)
@@ -1025,12 +850,8 @@ res <- RegParallel(
 res <- res[!is.na(res$P),]
 res
 
-#=========================================
-# add snippet to the RStudio
-#=========================================
-copy --> pp --> shift-tab
-
-pp is snippet shortcut in R studio; it has already been added.
+#========================================
+# helper function to select one column, while analyzing TCGA data
 #========================================
 
 # Function to select one column
@@ -1060,4 +881,25 @@ keep_one_column <- function(input_df, term){
 }
 
 
+#=========================================
+# add snippet to the RStudio
+#=========================================
+# To paste windows path to Rstudio, a snippet has been added in RStudio. 
+# Under windos system, the snippet can be activated by shift-tab
+# here, pp is snippet name, write pp and then press shift-tab will paste the altered path (if copied).
+# copy (file path) --> pp --> shift-tab
+# the snipped is as follow (it will substitute the forward slash with the bacslashes):
+snippet pp
+	"`r gsub('"', "", gsub("\\\\", "/", readClipboard()))`"
 
+#(2)
+snippet .
+	%>% 
+#(3)
+snippet tv
+	library(tidyverse)
+# (4)
+snippet ss
+	#=========================================
+	#
+	#=========================================
