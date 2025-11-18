@@ -112,6 +112,7 @@ processFile <- function(f) {
 						 header = TRUE, 
                          select = c(1,6:9), 
 						 data.table = TRUE)
+	# create and assign new col names for each file. 
   colnames(df) = c('uniprot', 
 				   paste0(bname, '_1'), 
 				   paste0(bname, '_2'), 
@@ -919,5 +920,6 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
