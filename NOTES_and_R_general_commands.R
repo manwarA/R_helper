@@ -22,6 +22,13 @@ str(data_frame)
 # to create random distribution with lower bound (-0.68) and upper bound (0.82)
 random_dist <- truncnorm::rtruncnorm(n=108, a=-0.68, b=0.82)#, mean=0.003, sd=0.292)
 
+# Evat data in survival analysis should be numeric, lol. The factor will create problem
+# and to convert factor into numeric, as.numeric(as.character((data)). Some times, conversion is not this straightforward.
+
+coxph(Surv(time = days, 
+           event = as.numeric(as.character(vital_status_0alive_1dead)), 
+             type = "right") ~ gene1 + gene2 + gene1:gene2, data = survival_data) # gene1:gene2 is an interaction term
+
 #===================================
 # No idea
 #===================================
@@ -912,4 +919,5 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
