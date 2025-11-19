@@ -931,6 +931,10 @@ create_random_data <- function(row_num, col_num, output = "matrix") {
 	# the out put should be either matrix of df, so if you want it to be df, just write anything.
 	# though, it is a crrude way to do, but it works.
 
+# added a check
+  stopifnot("rows can not be 0"  = row_num > 0 ,
+            "cols can not be 0"  = col_num > 0)
+  
   out <- matrix(sample(0:10, col_num, replace = TRUE), ncol = col_num, nrow = row_num)
   
   if (output != "matrix"){
@@ -945,5 +949,6 @@ create_random_data <- function(row_num, col_num, output = "matrix") {
 
 create_random_data(3, 5, output = "matrix") # it will create matrix
 create_random_data(3, 5, output = "mat") # it will create data frame
+
 
 
