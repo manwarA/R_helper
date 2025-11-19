@@ -927,12 +927,15 @@ snippet ss
 # create a random dataset; for testing and evlaution purposes
 #=========================================
 create_random_data <- function(row_num, col_num, output = "matrix"){
-   
+	# a small function to create test data set
+	# the out put should be either matrix of df, so if you want it to be df, just write anything.
+	# though, it is a crrude way to do, but it works.
+
   out <- matrix(sample(0:10, col_num, replace = TRUE), ncol = col_num, nrow = row_num)
   
   if (output != "matrix"){
     out <- as.data.frame(out)
-    # assign col names
+    # assign col names, in case of df, the default value is "V" with increasing number.
     column_names <- paste0(rep("col_", col_num), seq_len(col_num))
     names(out) <- column_names
   }
@@ -940,4 +943,6 @@ create_random_data <- function(row_num, col_num, output = "matrix"){
   return(out)
 }
 
-create_random_data(3, 5, output = "matrix")
+create_random_data(3, 5, output = "matrix") # it will create matrix
+create_random_data(3, 5, output = "mat") # it will create data frame
+
