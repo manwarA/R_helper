@@ -897,32 +897,6 @@ keep_one_column <- function(input_df, term){
   return (mat_col)
 }
 
-
-#=========================================
-# add snippet to the RStudio
-#=========================================
-# To paste windows path to Rstudio, a snippet has been added in RStudio. 
-# Under windos system, the snippet can be activated by shift-tab
-# here, pp is snippet name, write pp and then press shift-tab will paste the altered path (if copied).
-# copy (file path) --> pp --> shift-tab
-# the snipped is as follow (it will substitute the forward slash with the bacslashes):
-snippet pp
-	"`r gsub('"', "", gsub("\\\\", "/", readClipboard()))`"
-
-#(2)
-snippet .
-	%>% 
-#(3)
-snippet tv
-	library(tidyverse)
-# (4)
-snippet ss
-	#=========================================
-	#
-	#=========================================
-
-
-
 #=========================================
 # create a random dataset; for testing and evlaution purposes
 #=========================================
@@ -972,4 +946,30 @@ setColToRow <- function(df = df,
         return(df)
     }
 }
+
+
+
+
+				   #=========================================
+# add snippet to the RStudio
+#=========================================
+# To paste windows path to Rstudio, a snippet has been added in RStudio. 
+# Under windos system, the snippet can be activated by shift-tab
+# here, pp is snippet name, write pp and then press shift-tab will paste the altered path (if copied).
+# copy (file path) --> pp --> shift-tab
+# the snipped is as follow (it will substitute the forward slash with the bacslashes):
+snippet pp
+	"`r gsub('"', "", gsub("\\\\", "/", readClipboard()))`"
+
+#(2)
+snippet .
+	%>% 
+#(3)
+snippet tv
+	library(tidyverse)
+# (4)
+snippet ss
+	#=========================================
+	#
+	#=========================================
 
