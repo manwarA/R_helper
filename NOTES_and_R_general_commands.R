@@ -951,4 +951,25 @@ create_random_data(3, 5, output = "matrix") # it will create matrix
 create_random_data(3, 5, output = "mat") # it will create data frame
 
 
+#=========================================
+# Set col to row and delete it. 
+#=========================================
+setColToRow <- function(df = df, 
+                        col.name = "col.name") {
+    # if the column enteries are duplicated, it will make them uniq, otherwise, rownames can not be set.
+    stopifnot("Column name is not present in data frame: " = col.name %in% colnames(df))
+    
+    # unique the names; if not unique, rowname can not be set
+    df[[col.name]] = make.unique(df[[col.name]])
+    
+    if(!is.data.frame(df)) {
+        stop("df is not cohercible to df")
+    } else
+    {
+        rownames(df) = df[[col.name]]
+        df[[col.name]] = NULL
+        
+        return(df)
+    }
+}
 
