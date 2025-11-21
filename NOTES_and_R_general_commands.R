@@ -950,7 +950,7 @@ setColToRow <- function(df = df,
 
 
 
-				   #=========================================
+#=========================================
 # add snippet to the RStudio
 #=========================================
 # To paste windows path to Rstudio, a snippet has been added in RStudio. 
@@ -972,4 +972,5 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
