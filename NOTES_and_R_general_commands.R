@@ -903,7 +903,11 @@ keep_one_column <- function(input_df, term){
 create_random_data <- function(row_num, col_num, output = "matrix") {
 	# a small function to create test data set
 	# the out put should be either matrix of df, so if you want it to be df, just write anything.
-	# though, it is a crrude way to do, but it works.
+	# though, it is a crude way to do, but it works.
+	# It should be used for matrix of df type of random data set, as for simple numeric or character vectors, 
+	# base::sample can be used i.e 
+	# base::sample(letters, 5) --> "q" "p" "h" "v" "u"
+	# base::sample(0:10, 5) --> 3 5 6 1 0
 
 # added a check
   stopifnot("rows can not be 0"  = row_num > 0 ,
@@ -972,5 +976,6 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
