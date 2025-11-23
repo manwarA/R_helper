@@ -226,6 +226,38 @@ converted_ID <- biomaRt::getBM(attributes=c('affy_hg_u133_plus_2', 'hgnc_symbol'
       mart = mart)
 
 #==================================
+# Convert geneIDs from ENSEM to ENTREIDs
+#==================================
+
+# While converting the names, BiTr usually returns a df with two columns, "fromType" & "toType", and it is oftenly difficult to match them
+# to the original dataset. This is a simple function around that concept that BiTr should bind to converted IDs back to the original df 
+# for easier downstream analysis
+
+bitr2 <- function(df) {
+    stopifnot(class(df)  == "data.frame")
+    message("Input is not dataframe")
+    items <- row.names(df)
+    itemsID <- clusterProfiler::bitr(items, fromType="ENSEMBL", 
+                                     toType=c("ENTREZID", "SYMBOL"),
+                                     OrgDb=organism, drop=TRUE)
+    df <- merge(df, itemsID, by.x = 0, by.y="ENSEMBL", all.x = TRUE)
+    df <- transform(df, log2FoldChange = as.numeric(log2FoldChange), 
+                    ENTREZID = as.numeric(ENTREZID))
+    df <- df[complete.cases(df),]
+    df = df[!duplicated(df$ENTREZID),]
+    message("after removing NA: ", dim(df))
+    df
+}
+
+# another way converting probeIDs to other IDs
+require(hgu133a.db)
+
+annotMaster1 <- select(hgu133a.db,
+  keys = keys(hgu133a.db, 'PROBEID'),
+  column = c('PROBEID',  'SYMBOL',  'ENTREZID', 'ENSEMBL'),
+  keytype = 'PROBEID')
+
+#==================================
 # Feature selction and machine learing
 #==================================
 # First, identify the highly correlated attributes to save time, generally, > abs(0.75) or higher
@@ -288,39 +320,6 @@ probs <- predict(model.cv, caret.test, 'prob')
 
 # bind wtih actual data for easier inspection
 TEST.scored <- cbind(caret.test,class,probs) %>% mutate(data = "TEST")
-
-#==================================
-# Convert geneIDs from ENSEM to ENTREIDs
-#==================================
-
-# While converting the names, BiTr usually returns a df with two columns, "fromType" & "toType", and it is oftenly difficult to match them
-# to the original dataset. This is a simple function around that concept that BiTr should bind to converted IDs back to the original df 
-# for easier downstream analysis
-
-bitr2 <- function(df) {
-    stopifnot(class(df)  == "data.frame")
-    message("Input is not dataframe")
-    items <- row.names(df)
-    itemsID <- clusterProfiler::bitr(items, fromType="ENSEMBL", 
-                                     toType=c("ENTREZID", "SYMBOL"),
-                                     OrgDb=organism, drop=TRUE)
-    df <- merge(df, itemsID, by.x = 0, by.y="ENSEMBL", all.x = TRUE)
-    df <- transform(df, log2FoldChange = as.numeric(log2FoldChange), 
-                    ENTREZID = as.numeric(ENTREZID))
-    df <- df[complete.cases(df),]
-    df = df[!duplicated(df$ENTREZID),]
-    message("after removing NA: ", dim(df))
-    df
-}
-
-# another way converting probeIDs to other IDs
-require(hgu133a.db)
-
-annotMaster1 <- select(hgu133a.db,
-  keys = keys(hgu133a.db, 'PROBEID'),
-  column = c('PROBEID',  'SYMBOL',  'ENTREZID', 'ENSEMBL'),
-  keytype = 'PROBEID')
-
 
 #==================================
 # boxplot
@@ -983,6 +982,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
