@@ -22,13 +22,16 @@ str(data_frame)
 # to create random distribution with lower bound (-0.68) and upper bound (0.82)
 random_dist <- truncnorm::rtruncnorm(n=108, a=-0.68, b=0.82)#, mean=0.003, sd=0.292)
 
-# Evat data in survival analysis should be numeric, lol. The factor will create problem
-# and to convert factor into numeric, as.numeric(as.character((data)). Some times, conversion is not this straightforward.
+# Evat data in survival analysis should be numeric, lol. The factor will create problem,
+# and to convert factor into numeric, first convert into character then into numeric, like -- as.numeric(as.character((data)). 
+# Sometimes, conversion is not this straightforward.
 
 coxph(Surv(time = days, 
            event = as.numeric(as.character(vital_status_0alive_1dead)), 
              type = "right") ~ gene1 + gene2 + gene1:gene2, data = survival_data) # gene1:gene2 is an interaction term
 
+# to check the dim of multiple dfs in a list.
+lapply(result, dim)
 #===================================
 # No idea
 #===================================
@@ -147,7 +150,8 @@ df2_3 <- as.data.table(merge2)[as.data.table(merge1), on = "uniprot"]# allow.car
 #result_merge <- result_merge[rowSums(is.na(result_merge[, 2:ncol(result_merge)])) == 0, ]
 #result_merge <- result_merge %>%  dplyr::select(-starts_with("gene"))
 
-lapply(result, dim)
+## NOTE: If the data is similar, then column binding is more straingt forward, fast and less memory intensive. In this case, create one unique column that has all the enteries that will be used for merging, 
+# and merge that column to all the dataframes. This can create a consistent column-entry for easy cbind() implementation.
 
 #==================================
 # Negation, it should be the part of R-base
@@ -155,6 +159,15 @@ lapply(result, dim)
 # to negate the function in r 
 "%notin%" <- function(x,table) match(x,table, nomatch = 0) == 0
 '%notin%' <- Negate('%in%')
+
+#==================================
+# Change warning behavior
+#=================================
+
+# change the bahavior of warnings
+# It may be useful to specify options(warn=2, error=recover)
+# As mentioned by @plannapus, warn=2 will upgrade warnings to errors; error=recover will drop you into a debug/browser mode at the point where the warning (now upgraded to an error) occurred. 
+# (Use options(warn=0, error=NULL) to restore the original settings.)
 
 #==================================
 # Trim white spaces 
@@ -170,12 +183,6 @@ x <- c(" lead", "trail ", " both ", " both and middle ", " _special")
 ## a much less concise regex 
 gsub_trim <- function (x) gsub("^\\s+|\\s+$", "", x)
 
-# change the bahavior of warnings
-# It may be useful to specify options(warn=2, error=recover)
-# As mentioned by @plannapus, warn=2 will upgrade warnings to errors; error=recover will drop you into a debug/browser mode at the point where the warning (now upgraded to an error) occurred. 
-# (Use options(warn=0, error=NULL) to restore the original settings.)
-
-
 #==================================
 # String formating and editing
 #=================================
@@ -187,9 +194,9 @@ df$name <- gsub('A', 'Andy',
            gsub('B', 'Bob',
            gsub('C', 'Chad', df$name)))
 
-ifelse(match(des_geoa$des, colnames(mat.gse126848)), 
-       gsub(., des_geoa$geoa, .), colnames(mat.gse126848) )
-des2 <- des[match(des, colnames(mat.gse126848))]
+ifelse(match(des_geoa$des, colnames(mat)), 
+       gsub(., des_geoa$geoa, .), colnames(mat) )
+des2 <- des[match(des, colnames(mat))]
 
 #==================================
 # GEO related
@@ -211,12 +218,12 @@ x <- hgu133plus2SYMBOL
 mapped_probes <- mappedkeys(x)
 test <- clusterProfiler::bitr(gse37$ID, fromType = "PROBEID", toType = "SYMBOL",
                       OrgDb = "hgu133plus2.db", drop =TRUE)
-mart <-    biomaRt::useEnsembl("ensembl","hsapiens_gene_ensembl")
+
+mart <- biomaRt::useEnsembl("ensembl","hsapiens_gene_ensembl")
 converted_ID <- biomaRt::getBM(attributes=c('affy_hg_u133_plus_2', 'hgnc_symbol'), 
       filters = 'affy_hg_u133_plus_2',  #'external_gene_name', #
-      values = gse37$ID,           # what you have
+      values = gse$ID,           # what you have
       mart = mart)
-
 
 #==================================
 # Feature selction and machine learing
@@ -976,6 +983,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
