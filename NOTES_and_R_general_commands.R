@@ -128,6 +128,20 @@ processFile <- function(f) {
 # Apply the function to all files.
 result <- sapply(paths, processFile)
 
+# another way to read multiple files
+reader.maf.files <- function(fpath, numb){
+    bname = strsplit(basename(fpath), split = ".", fixed = TRUE,)[[1]][1]
+    file = read.table(fpath, sep = "\t", header = TRUE)
+    file = file[col.to.keep]
+    colnames(file)[1] <- bname
+    colnames(file)[3:length(file)] = paste0(colnames(file)[3:length(file)], "_", counter)
+    counter <<- counter + 1  # "<<-" to update values outside of function.
+    return(file)
+}
+
+counter = 1
+maf.luad <- lapply(files, reader.maf.files)
+				 
 #===================================
 # Merging
 #===================================
@@ -219,10 +233,14 @@ mapped_probes <- mappedkeys(x)
 test <- clusterProfiler::bitr(gse37$ID, fromType = "PROBEID", toType = "SYMBOL",
                       OrgDb = "hgu133plus2.db", drop =TRUE)
 
+# for easier access, you can search ID type in the biomaRt object, 
+x = biomaRt::listAttributes(ensembl)
+x[grep("affy", x$description, ignore.case = T),]
+						
 mart <- biomaRt::useEnsembl("ensembl","hsapiens_gene_ensembl")
-converted_ID <- biomaRt::getBM(attributes=c('affy_hg_u133_plus_2', 'hgnc_symbol'), 
-      filters = 'affy_hg_u133_plus_2',  #'external_gene_name', #
-      values = gse$ID,           # what you have
+converted_ID <- biomaRt::getBM(attributes=c('affy_hg_u133_plus_2', 'hgnc_symbol'), # data types you want.
+      filters = 'affy_hg_u133_plus_2',  # external_gene_name, or type of IDs you have.
+      values = gse$ID,           		# list of ID
       mart = mart)
 
 #==================================
@@ -349,46 +367,14 @@ cbind.fill <- function(...) {
 							}
 
 #==================================
-# biomaRt
-#==================================
-library("biomaRt")
-ensembl <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-mapping <- getBM(attributes = c("ensembl_gene_id"), 
-                 values = probs,
-                 mart = ensembl)
+# package version and unloading of package. 
+#==================================						  
 
-
-x = listAttributes(ensembl)
-x[grep("affy", x$description, ignore.case = T),]
-
-# mdata <- mdata[mdata$samp %in% colnames(cData2) , ]
-smapT$status2 <- ifelse(grepl("Rec", smapT$status, fixed = T), "Rec", "Tum")
-
-smapT$status2 <- ifelse(grepl("Non-Recurrent-NSCLC", smapT$status, fixed = T), "Tum", smapT$status2)    
-smapT$status <- NULL
-
-
-# unload name space, remove package from environment, unload
+# Unload name space, remove package from environment, unload
 unloadNamespace("TCGAbiolinks")
 detach("package:TCGAbiolinks", unload = TRUE, force = TRUE)
 
 packageVersion("TCGAbiolinks")
-
-
-
-reader.maf.files <- function(fpath, numb){
-    bname = strsplit(basename(fpath), split = ".", fixed = TRUE,)[[1]][1]
-    file = read.table(fpath, sep = "\t", header = TRUE)
-    file = file[col.to.keep]
-    colnames(file)[1] <- bname
-    colnames(file)[3:length(file)] = paste0(colnames(file)[3:length(file)], "_", counter)
-    counter <<- counter + 1
-    return(file)
-}
-
-counter = 1
-maf.luad <- lapply(files, reader.maf.files)
-
 
 #==================================
 # Converting UUID values to file names, 
@@ -982,6 +968,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
