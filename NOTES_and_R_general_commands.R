@@ -10,7 +10,8 @@ file <- data.table::fread("file.csv",
 						  sep = "\t", 
 						  blank.lines.skip=TRUE, 
 						  header = TRUE)
-#Run this command in case many background files are open e.g. plots or pdf files
+
+# Run this command in case many background files are open e.g. plots or pdf files
 dev.off()
 
 # select max value between two columns; pmax is parallel maximum
@@ -26,6 +27,7 @@ random_dist <- truncnorm::rtruncnorm(n=108, a=-0.68, b=0.82)#, mean=0.003, sd=0.
 # and to convert factor into numeric, first convert into character then into numeric, like -- as.numeric(as.character((data)). 
 # Sometimes, conversion is not this straightforward.
 
+library(survival)
 coxph(Surv(time = days, 
            event = as.numeric(as.character(vital_status_0alive_1dead)), 
              type = "right") ~ gene1 + gene2 + gene1:gene2, data = survival_data) # gene1:gene2 is an interaction term
@@ -968,6 +970,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
