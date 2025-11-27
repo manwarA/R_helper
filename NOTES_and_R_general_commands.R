@@ -903,7 +903,7 @@ keep_one_column <- function(input_df, term){
 #=========================================
 # create a random dataset; for testing and evlaution purposes
 #=========================================
-create_random_data <- function(row_num, col_num, output = "matrix") {
+create_random_data <- function(row_num, col_num, output = "matrix", range = c(0, 10) ) {
 	# a small function to create test data set
 	# the out put should be either matrix of df, so if you want it to be df, just write anything.
 	# though, it is a crude way to do, but it works.
@@ -915,8 +915,9 @@ create_random_data <- function(row_num, col_num, output = "matrix") {
 # added a check
   stopifnot("rows can not be 0"  = row_num > 0 ,
             "cols can not be 0"  = col_num > 0)
-  
-  out <- matrix(sample(0:10, col_num, replace = TRUE), ncol = col_num, nrow = row_num)
+	
+ out <- replicate(col_num, sample(range[1]:range[2], size= row_num), simplify=FALSE)
+ out <- do.call("cbind", out)
   
   if (output != "matrix"){
     out <- as.data.frame(out)
@@ -979,6 +980,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
