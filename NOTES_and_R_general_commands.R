@@ -84,6 +84,15 @@ tab <- topTable(ebayes, coef=2, adjust="fdr", n=10)
 # it was a test, but the GEO data is very unpredictable/messsy
 # making it really hard to convert it into ExpressionSet
 
+#get data from GEO
+geo_data <- getGEO(GEO = "GSE12456",
+				   destdir = dir_path,
+				  GSEMatrix = T, 
+				  getGPL = F) # getGPL can be heavy
+# read local data, series_matrix file
+series_mat <- getGEO(filename = file_path,
+					GSEMatrix = True)
+				 
 eset <- ExpressionSet(assayData = as.matrix(mat),
                       phenoData =  Biobase::AnnotatedDataFrame(phenoData(df[[1]])))
 
@@ -970,6 +979,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
