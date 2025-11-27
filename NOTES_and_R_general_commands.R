@@ -292,7 +292,7 @@ annotMaster1 <- select(hgu133a.db,
 # First, identify the highly correlated attributes to save time, generally, > abs(0.75) or higher
 # attributes should be removed; the correlation can be computed using base function "cor"
 
-corrMatrix <- cor(df)
+corrMatrix <- cor(df) # output is all * all cor matrix of same dim
 
 highlyCorrelated <- caret::findCorrelation(corrMatrix, cutoff = 0.75)
 
@@ -979,6 +979,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
