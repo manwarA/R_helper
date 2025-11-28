@@ -961,6 +961,13 @@ create_random_data <- function(row_num, col_num, output = "matrix", range = c(0,
 create_random_data(3, 5, output = "matrix") # it will create matrix
 create_random_data(3, 5, output = "mat") # it will create data frame
 
+# need to adjust
+DF <- data.frame(A = rnorm(5),
+                 B = rnorm(5),
+                 C = rnorm(5),
+                 D = rnorm(5),
+                 E = rnorm(5),
+                 F = rnorm(5))				   
 
 #=========================================
 # Set col to row and delete it. 
@@ -1009,6 +1016,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
