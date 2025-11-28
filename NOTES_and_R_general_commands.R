@@ -67,6 +67,16 @@ wilcox.test(as.numeric(common2[1, 2:193]), random_dist, paired = F, alternative 
 # Moreover, in microarray, the Robust Muti-array analysis (RMA) converts the intensities into log2 form, making it easy to find log2FC
 # and simply running the t test, the significance can be calculated
 
+# calculate normalizing factor
+d0 <- calcNormFactors(d0)
+
+# Filter low-expressed genes
+cutoff <- 1 # can be vary
+drop <- which(apply(cpm(d0), 1, max) < cutoff)
+d <- d0[-drop,] 
+# number of genes left
+dim(d) 
+				 
 design_limm <- model.matrix(~ factor(mapping3$sampleType))
 fit <- lmFit(eset, design_limm)
 ebayes <- eBayes(fit)
@@ -980,6 +990,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
