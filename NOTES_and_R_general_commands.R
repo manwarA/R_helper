@@ -76,9 +76,19 @@ drop <- which(apply(cpm(d0), 1, max) < cutoff)
 d <- d0[-drop,] 
 # number of genes left
 dim(d) 
-				 
+
+plotMDS(d, col = as.numeric(group)) # col is the type of group you want to check the contrast/group
+
+# Specify the model to be fitted. We do this before using voom since voom uses variances of the model residuals (observed - fitted)
+mm <- model.matrix(~0 + group)
+# The above specifies a model where each coefficient corresponds to a group mean
+
+# OR create design matrix				 
 design_limm <- model.matrix(~ factor(mapping3$sampleType))
-fit <- lmFit(eset, design_limm)
+# plot mean-variance trend
+y <- voom(d, mm, plot = T)
+
+fit <- lmFit(y, design_limm)
 ebayes <- eBayes(fit)
 
 lod <- -log10(ebayes[["p.value"]][, 2])
@@ -990,6 +1000,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
