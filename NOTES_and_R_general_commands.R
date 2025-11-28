@@ -63,6 +63,7 @@ wilcox.test(as.numeric(common2[1, 2:193]), random_dist, paired = F, alternative 
 # Limma for gene expression
 #===================================
 # limma for microarray data analysis
+# https://ucdavis-bioinformatics-training.github.io/2018-June-RNA-Seq-Workshop/thursday/DE.html
 # limma is for continuous data while the DESeq2 and EdgeR are for count data
 # Moreover, in microarray, the Robust Muti-array analysis (RMA) converts the intensities into log2 form, making it easy to find log2FC
 # and simply running the t test, the significance can be calculated
@@ -81,14 +82,15 @@ plotMDS(d, col = as.numeric(group)) # col is the type of group you want to check
 
 # Specify the model to be fitted. We do this before using voom since voom uses variances of the model residuals (observed - fitted)
 mm <- model.matrix(~0 + group)
-# The above specifies a model where each coefficient corresponds to a group mean
 
 # OR create design matrix				 
 design_limm <- model.matrix(~ factor(mapping3$sampleType))
+# The above specifies a model where each coefficient corresponds to a group mean
+
 # plot mean-variance trend
 y <- voom(d, mm, plot = T)
 
-fit <- lmFit(y, design_limm)
+fit <- lmFit(y, design_limm OR mm)
 ebayes <- eBayes(fit)
 
 lod <- -log10(ebayes[["p.value"]][, 2])
@@ -96,6 +98,13 @@ mtstat <- ebayes[["t"]][, 2]
 
 # top significant genes
 tab <- topTable(ebayes, coef=2, adjust="fdr", n=10)
+
+# in case, new contrast has to be analyzed, just create new contrast and put that one in formula, rest is same
+contr <- makeContrasts(groupI5.6 - groupC.6, levels = colnames(coef(fit)))
+tmp <- contrasts.fit(fit, contr)
+tmp <- eBayes(tmp)
+top.table <- topTable(tmp, sort.by = "P", n = Inf)
+head(top.table, 20)				 
 
 #===================================
 # GEO related
@@ -1000,6 +1009,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
