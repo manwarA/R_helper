@@ -20,9 +20,6 @@ common1$log10pvalue <- pmax(common1$log10pvalue.x, common1$log10pvalue.y)
 # to chek the type of individual coloumn types
 str(data_frame)
 
-# to create random distribution with lower bound (-0.68) and upper bound (0.82)
-random_dist <- truncnorm::rtruncnorm(n=108, a=-0.68, b=0.82)#, mean=0.003, sd=0.292)
-
 # Evat data in survival analysis should be numeric, lol. The factor will create problem,
 # and to convert factor into numeric, first convert into character then into numeric, like -- as.numeric(as.character((data)). 
 # Sometimes, conversion is not this straightforward.
@@ -967,7 +964,10 @@ DF <- data.frame(A = rnorm(5),
                  C = rnorm(5),
                  D = rnorm(5),
                  E = rnorm(5),
-                 F = rnorm(5))				   
+                 F = rnorm(5))
+
+# to create random distribution with lower bound (-0.68) and upper bound (0.82)
+random_dist <- truncnorm::rtruncnorm(n=108, a=-0.68, b=0.82)#, mean=0.003, sd=0.292)				   
 
 #=========================================
 # Set col to row and delete it. 
@@ -1016,6 +1016,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
