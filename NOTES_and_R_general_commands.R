@@ -27,11 +27,6 @@ random_dist <- truncnorm::rtruncnorm(n=108, a=-0.68, b=0.82)#, mean=0.003, sd=0.
 # and to convert factor into numeric, first convert into character then into numeric, like -- as.numeric(as.character((data)). 
 # Sometimes, conversion is not this straightforward.
 
-library(survival)
-coxph(Surv(time = days, 
-           event = as.numeric(as.character(vital_status_0alive_1dead)), 
-             type = "right") ~ gene1 + gene2 + gene1:gene2, data = survival_data) # gene1:gene2 is an interaction term
-
 # to check the dim of multiple dfs in a list.
 lapply(result, dim)
 #===================================
@@ -877,6 +872,11 @@ validObject(eCelData)
 #=========================================
 # Survival analysis
 #=========================================
+library(survival)
+coxph(Surv(time = days, 
+           event = as.numeric(as.character(vital_status_0alive_1dead)), 
+             type = "right") ~ gene1 + gene2 + gene1:gene2, data = survival_data) # gene1:gene2 is an interaction term
+				   
 # survival analysis parallel
 library(survival)
 library(RegParallel)
@@ -1016,6 +1016,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
