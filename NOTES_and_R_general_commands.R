@@ -259,11 +259,76 @@ ifelse(match(des_geoa$des, colnames(mat)),
 des2 <- des[match(des, colnames(mat))]
 
 #==================================
-# GEO related
+# GEO related, and other expression sets related
 #=================================
 gse <- getGEO("GSE33814", GSEMatrix = TRUE, 
-                destdir="E:/NASH/geo_data_nash",
+                destdir="E:/path_to_dir/geo_data",
                 getGPL = FALSE)
+
+if (length(gse) > 1) 
+	idx <- grep("GPL570", attr(gse, "names")) 
+						else idx <- 1
+gse <- gse[[idx]]
+
+# custom CDF install
+# install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezgcdf_22.0.0.tar.gz", type="source", repos=NULL)
+# install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezgprobe_22.0.0.tar.gz", type="source", repos=NULL)
+# install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezg.db_22.0.0.tar.gz", type="source", repos=NULL)
+
+# convert series matrix (expression set) to annotatedDataFrame or ExpressionFeatureSet
+tADF <- AnnotatedDataFrame(#data = exprs(gse109),
+                   pData(phenoData(gse109)))
+                   
+#new("ExpressionFeatureSet", exprs= exprs(gse109))
+gse109_efs <- new("ExpressionFeatureSet",
+                  assayData = assayData(gse109),
+                  exprs= exprs(gse109), 
+                  phenoData = phenoData(gse109))#, 
+                  #featureData = featureData(gse109), 
+                  #experimentData = experimentData(gse109), 
+                  #annotation = gse109@annotation)#,
+                  #platform = gse109@annotation)
+
+#stopifnot(validObject(CelData))
+validObject(gse109)
+
+
+# create elist object to analyse Illumina microarray expression data; while analysing GSE109211, however, not all the variables were available at that time.
+gse190_elist <- new("EListRaw")
+
+gse190_elist@.Data[[1]] <- 'illumina'
+?gse190_elist@.Data[[2]] <- targetinfo
+gse190_elist@.Data[[3]] <- wdgs[[1]]
+gse190_elist@.Data[[4]] <- gse109_data_exp
+gse190_elist@.Data[[5]] <- NULL
+gse190_elist$E <- gse109_data_exp
+
+gse190_elist$targets <- targetinfo
+gse190_elist$genes <- wdgs[[1]]
+gse190_elist$other$Detection <- gse109_data_pvalue
+
+
+# reconstruct the CelData; FeatureExpressionSet
+# The FeatureSet class is VIRTUAL. Therefore users are not able to create instances of such class. 
+# Objects for FeatureSet-like classes can be created by calls of the form: 
+# new(CLASSNAME, assayData, manufacturer, platform, exprs, phenoData, featureData, experimentData, annotation, ...). 
+# But the preferred way is using parsers like read.celfiles and read.xysfiles.
+
+keep_row_pdata <- grepl("_2", rownames(pData(CelData)), ignore.case = T)
+
+pData(CelData) <- pData(CelData)[!keep_row_pdata, ]
+rownames(pData(CelData))  <- sub(pattern = "_1",replacement = "", x = rownames(pData(CelData)) )
+
+# expression feature set
+efs <- new("ExpressionFeatureSet",
+           manufacturer = "Affymetrix",
+           exprs = as.matrix(celdata_exp),
+           phenoData =   phenoData(CelData),
+           featureData = featureData(CelData),
+           annotation = "pd.hg.u133a")
+
+eCelData <- efs
+validObject(eCelData)
 
 #==================================
 # Affymatrix can be manipulated in multiple ways
@@ -784,87 +849,6 @@ loadfonts(device = "win")
     scale_color_manual(values = c("darkorange2", "dodgerblue4", "green")) +
     theme_classic()
   
-
-
-# custom CDF install
-# install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezgcdf_22.0.0.tar.gz", type="source", repos=NULL)
-# install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezgprobe_22.0.0.tar.gz", type="source", repos=NULL)
-# install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezg.db_22.0.0.tar.gz", type="source", repos=NULL)
-
-
-
-
-
-
-# get the expression set from the GEO dataset
-gse109211 <- getGEO("GSE109211", GSEMatrix = T)
-
-if (length(gse109211) > 1) idx <- grep("GPL570", attr(gse109211, "names")) else idx <- 1
-gse109211 <- gse109211[[idx]]
-
-
-# write.table(biomaRt::listAttributes(mart), file = "biomaRt_attributes_list.txt",
-#             sep = "\t", quote = F)
-
-# convert series matrix (expression set) to annotatedDataFrame or ExpressionFeatureSet
-tADF <- AnnotatedDataFrame(#data = exprs(gse109),
-                   pData(phenoData(gse109)))
-                   
-#new("ExpressionFeatureSet", exprs= exprs(gse109))
-gse109_efs <- new("ExpressionFeatureSet",
-                  assayData = assayData(gse109),
-                  exprs= exprs(gse109), 
-                  phenoData = phenoData(gse109))#, 
-                  #featureData = featureData(gse109), 
-                  #experimentData = experimentData(gse109), 
-                  #annotation = gse109@annotation)#,
-                  #platform = gse109@annotation)
-
-#stopifnot(validObject(CelData))
-validObject(gse109)
-
-
-
-# create elist object to analyse Illumina microarray expression data; while analysing GSE109211, however, not all the variables were available at that time.
-gse190_elist <- new("EListRaw")
-
-gse190_elist@.Data[[1]] <- 'illumina'
-?gse190_elist@.Data[[2]] <- targetinfo
-gse190_elist@.Data[[3]] <- wdgs[[1]]
-gse190_elist@.Data[[4]] <- gse109_data_exp
-gse190_elist@.Data[[5]] <- NULL
-gse190_elist$E <- gse109_data_exp
-
-gse190_elist$targets <- targetinfo
-gse190_elist$genes <- wdgs[[1]]
-gse190_elist$other$Detection <- gse109_data_pvalue
-
-
-
-
-# reconstruct the CelData; FeatureExpressionSet
-# The FeatureSet class is VIRTUAL. Therefore users are not able to create instances of such class. 
-# Objects for FeatureSet-like classes can be created by calls of the form: 
-# new(CLASSNAME, assayData, manufacturer, platform, exprs, phenoData, featureData, experimentData, annotation, ...). 
-# But the preferred way is using parsers like read.celfiles and read.xysfiles.
-
-keep_row_pdata <- grepl("_2", rownames(pData(CelData)), ignore.case = T)
-
-pData(CelData) <- pData(CelData)[!keep_row_pdata, ]
-rownames(pData(CelData))  <- sub(pattern = "_1",replacement = "", x = rownames(pData(CelData)) )
-
-# expression feature set
-efs <- new("ExpressionFeatureSet",
-           manufacturer = "Affymetrix",
-           exprs = as.matrix(celdata_exp),
-           phenoData =   phenoData(CelData),
-           featureData = featureData(CelData),
-           annotation = "pd.hg.u133a")
-
-eCelData <- efs
-validObject(eCelData)
-
-
 #=========================================
 # Survival analysis
 #=========================================
@@ -921,7 +905,6 @@ keep_one_column <- function(input_df, term){
     cat("\n\ncolumn names are:\n\n ", colnames(mat_col))
     mat_col$merged <- dplyr::coalesce(mat_col[, 1], mat_col[, 2] )
     
-  
   return (mat_col)
 }
 
@@ -958,7 +941,7 @@ create_random_data(3, 5, output = "matrix") # it will create matrix
 create_random_data(3, 5, output = "mat") # it will create data frame
 
 # need to adjust
-DF <- data.frame(A = rnorm(5),
+DF <- data.frame(A = rnorm(5), # normal distribution
                  B = rnorm(5),
                  C = rnorm(5),
                  D = rnorm(5),
@@ -1015,6 +998,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
