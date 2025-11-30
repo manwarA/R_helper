@@ -270,7 +270,7 @@ if (length(gse) > 1)
 						else idx <- 1
 gse <- gse[[idx]]
 
-# custom CDF install
+# custom CDF install; may be relevant "https://www.biostars.org/p/67294/"
 # install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezgcdf_22.0.0.tar.gz", type="source", repos=NULL)
 # install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezgprobe_22.0.0.tar.gz", type="source", repos=NULL)
 # install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezg.db_22.0.0.tar.gz", type="source", repos=NULL)
@@ -439,7 +439,8 @@ model.cv <- train(sampleType ~ cg02855924+cg26325335+cg27071460+cg14823851+cg015
                   preProcess = c('scale', 'center'),
                   na.action = na.omit)
 
-model.cv
+# print the model
+print(model.cv)
 
 plot(model.cv)
 
@@ -642,6 +643,12 @@ roc_df <- data.frame(
   labels=roc.cg$response, 
   scores=roc.cg$predictor)
 
+#==================================
+# Plot various aspects in linear/log regression
+#==================================
+
+# needs to updat
+						  
 #==================================
 # Machine learning in R
 #==================================
@@ -998,6 +1005,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
