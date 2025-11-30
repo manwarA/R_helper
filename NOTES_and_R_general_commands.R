@@ -26,6 +26,20 @@ str(data_frame)
 
 # to check the dim of multiple dfs in a list.
 lapply(result, dim)
+
+# version of R-base and other relevant information
+version
+
+# check where lib are installed
+.libPaths()
+
+# check the common element between two vector
+intersect(Up, Dn)
+# "Metazoa_SRP" "Y_RNA" 
+
+# reading excel files
+readxl::read_excel
+
 #===================================
 # No idea
 #===================================
@@ -574,21 +588,12 @@ library(caret)
 #==================================
 ls("package:enrichR")
 
-
-
-intersect(Up, Dn)
-# "Metazoa_SRP" "Y_RNA" 
-
 #================================== 
 # detach a package in R
 #==================================
 detach("package:pscl", unload=TRUE)
 #You can also use the unloadNamespace command, as in:
 unloadNamespace("pscl")
-
-
-# reading excel files
-readxl::read_excel
 
 #================================== 
 # ggplot in R
@@ -835,12 +840,6 @@ gse190_elist$genes <- wdgs[[1]]
 gse190_elist$other$Detection <- gse109_data_pvalue
 
 
-# version of R
-version
-
-# check where lib are installed
-.libPaths()
-
 
 
 # reconstruct the CelData; FeatureExpressionSet
@@ -1016,6 +1015,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
