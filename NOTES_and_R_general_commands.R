@@ -507,7 +507,144 @@ confusionMatrix(data=pred, caret.test$status2)# not working
 f1 <- pROC::roc(status2 ~ model.cv.f5, data = caret.test) 
 plot(f1)
 
+#==================================
+# Model evaluation methods
+#==================================
 
+# for the entire model
+
+auc_check <- function(testModel, 
+                      testData,
+                      type = "prob",
+                      targetColumn = "status2",
+                      plot = TRUE) {
+    require(ROCR)
+    
+    prob = predict(testModel, newdata = testData, type = type)[,2]
+    
+    pred = ROCR::prediction(prob, as.data.frame(testData[ , targetColumn]))
+    perf = ROCR::performance(pred, measure = "tpr", x.measure = "fpr")
+    if (plot) {
+        plot(perf)}
+    auc = ROCR::performance(pred, measure = "auc")
+    auc = auc@y.values[[1]]
+    return(auc) 
+    
+}
+
+auc_check(testModel = model.cv.f5, testData = caret.train, plot = FALSE)
+
+
+auc_check2 <- function(model, 
+                       testData, 
+                       trainData, 
+                       targetClass = "targetCol")
+{
+    
+    require(dplyr)
+    library(yardstick)
+    class <- predict(model, testData)
+    probs <- predict(model, testData, "prob") # 
+    
+    
+    TEST.scored <- cbind(testData, class, probs) %>% 
+        mutate(data = "TEST")
+    
+    # score TRAIN
+    class = predict(model, trainData)
+    probs = predict(model, trainData, 'prob')
+    
+    TRAIN.scored = cbind(trainData, class, probs) %>% 
+        mutate(data = "TRAIN")
+    
+    TRAIN_TEST_scored = rbind(TRAIN.scored, TEST.scored)
+    TRAIN_TEST_scored[, targetClass] = as.factor(TRAIN_TEST_scored[, targetClass])
+    
+    #library(fpps)
+    TRAIN_TEST_scored %>%
+        group_by(data) %>%
+        roc_auc(truth = targetClass, "Rec")
+}
+
+auc_check2(model.cv.f5, caret.test, caret.train, targetClass = "status2")
+
+
+# confusion matrix will not work if type != "raw", 
+
+pred.prob <- predict(model.cv.f5, newdata = caret.test, type = "raw")
+caret::confusionMatrix(data = pred.prob, caret.test$status2, positive = "Rec")
+
+
+#
+# TO calculate the Brier Score
+#
+
+calcBrierScore <- function(model, 
+                           testdata = "testData",
+                           targetCol = "status2")
+    {
+    
+    require(DescTools)
+    # first calculate the probabilities of prediction
+    pred.prob = stats::predict(model, newdata = testdata, type = "prob")
+    
+    bScore1 = DescTools::BrierScore(as.numeric(testdata[ , targetCol]) -1, pred.prob[, 2])
+    cat("From DescTools::BrierScore: ", bScore1)
+    
+    # Brier Score is similar to MSE; therefore
+    f_t = pred.prob[,2]
+    o_t = as.numeric(testdata[ , targetCol ] ) - 1 # species are the target class
+    bScore2 = mean((f_t - o_t)^2)
+    cat("\nFrom formula: ", bScore2)
+    }
+
+calcBrierScore(model.cv.f5, testdata = caret.test)
+
+#https://stackoverflow.com/questions/61014688/r-caret-package-brier-score
+
+#I use the Brier score to tune my models in caret for binary classification. 
+# I ensure that the "positive" class is the second class, which is the default when 
+# you label your response "0:1". Then I created this master summary function, 
+# based on caret's own suite of summary functions, to return all the metrics I want to see:
+
+BigSummary <- function (data, lev = NULL, model = NULL) {
+    pr_auc <- try(MLmetrics::PRAUC(data[, lev[2]],
+                                   ifelse(data$obs == lev[2], 1, 0)),
+                  silent = TRUE)
+    brscore <- try(mean((data[, lev[2]] - ifelse(data$obs == lev[2], 1, 0)) ^ 2),
+                   silent = TRUE)
+    rocObject <- try(pROC::roc(ifelse(data$obs == lev[2], 1, 0), data[, lev[2]],
+                               direction = "<", quiet = TRUE), silent = TRUE)
+    if (inherits(pr_auc, "try-error")) pr_auc <- NA
+    if (inherits(brscore, "try-error")) brscore <- NA
+    
+    rocAUC <- if (inherits(rocObject, "try-error")) {
+        NA
+    } else {
+        rocObject$auc
+    }
+    
+    tmp <- unlist(e1071::classAgreement(table(data$obs,
+                                              data$pred)))[c("diag", "kappa")]
+    out <- c(Acc = tmp[[1]],
+             Kappa = tmp[[2]],
+             AUCROC = rocAUC,
+             AUCPR = pr_auc,
+             Brier = brscore,
+             Precision = caret:::precision.default(data = data$pred,
+                                                   reference = data$obs,
+                                                   relevant = lev[2]),
+             Recall = caret:::recall.default(data = data$pred,
+                                             reference = data$obs,
+                                             relevant = lev[2]),
+             F = caret:::F_meas.default(data = data$pred, reference = data$obs,
+                                        relevant = lev[2]))
+    out
+}
+
+#Now I can simply pass  summaryFunction = BigSummary in trainControl and then 
+# metric = "Brier", maximize = FALSE in the train call.
+						
 #==================================
 # boxplot
 #==================================
@@ -1062,6 +1199,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
