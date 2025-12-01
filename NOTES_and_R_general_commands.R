@@ -3,7 +3,7 @@ library(dplyr)
 
 # This is for general history and commands list
 #===================================
-# General
+# General,  
 #===================================
 # data.table fread is faster than regular read.csv
 file <- data.table::fread("file.csv",
@@ -38,8 +38,11 @@ intersect(Up, Dn)
 # "Metazoa_SRP" "Y_RNA" 
 
 # reading excel files
+# library needed (readxl)
 readxl::read_excel
 
+# If the library is installed, you can access any function from that lib using double colons (::), for example:
+# readxl::read_excel
 #===================================
 # No idea
 #===================================
@@ -1010,6 +1013,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
