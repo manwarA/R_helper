@@ -1127,10 +1127,38 @@ ggplot(data = deg_dm, aes(x = Est_groupTumor, y = log2FoldChange)) +
     theme_bw()  	   
 
 
+plist <- list()
+for (i in list.files("results_and_fingures/", 
+                     pattern = "GO_Biological", 
+                     recursive = T, 
+                     full.names = T)) {
+    
+    title = stringr::str_split_i(i, pattern = "/", 2)
+    
+    if( title == "Common_genes_between_Reactome_KEGG" ) {
+        stringr::str_split_i(title, pattern = "_", 1)
+    } else { }
+    
+    print(title)
+    first <- read.csv(i, sep = "\t", header = T, stringsAsFactors = F)[, c(1,4)]
 
-	   #############################################################
+    plist[[i]] <- ggplot(first[1:10, ], aes(x = -log10(Adjusted.P.value[1:10]), y =  reorder(Term[1:10], -log10(Adjusted.P.value[1:10])))) + 
+        geom_bar(stat = "identity", fill = "coral3") + 
+        theme_classic() + 
+        xlab("-log10(adj.p-value") + 
+        ylab("Term") + 
+        scale_y_discrete(labels = function(x) {
+            is_long <- nchar(x) > 25
+            x[is_long] <- paste0(substr(x[is_long], 1, 25), ".") # this can trim the label, from very long to a reasonable lenght
+            x
+        }) +
+        ggtitle(title)
+
+}
+
+#===================================================
 # EnrichR for RNA seq data
-#############################################################
+#===================================================
 
 #install.packages("enrichR")
 library(enrichR)
@@ -1485,6 +1513,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
