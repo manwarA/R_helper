@@ -1115,6 +1115,75 @@ mydata <- mydata %>%
 		group_by(log2fc) %>% 
 		mutate(log2fc2 = log2fc + seq(0, by=0.00001, length.out= n()))
 
+
+# create a star bust plot 
+ggplot(data = deg_dm, aes(x = Est_groupTumor, y = log2FoldChange)) + 
+    geom_point(colour = "white", shape = 21, size = 2, aes(fill = factor(dataType))) + 
+    geom_hline(yintercept = c(1, -1), linetype = "dashed", color = "red") + 
+    geom_vline(xintercept = c(0.3, -0.3), linetype = "dashed", color = "blue") +
+    scale_x_continuous(breaks = c(0, 0.3, -0.3), minor_breaks=NULL) +
+    scale_y_continuous(breaks = c(seq(0,8,2), seq(0,-8,-2)), minor_breaks=NULL) +
+    xlab("Methylation differences") + ylab("log2FoldChange")+
+    theme_bw()  	   
+
+
+
+	   #############################################################
+# EnrichR for RNA seq data
+#############################################################
+
+#install.packages("enrichR")
+library(enrichR)
+
+#by default, species == human 
+
+#Then find the list of all available databases from Enrichr.
+#dbs <- listEnrichrDbs()
+#listEnrichrSites()
+
+enrichr_GO <- function(geneNames, fName) {
+    
+    websiteLive <- TRUE
+    
+    dbs <- c("GO_Biological_Process_2021",	# 3 
+             "KEGG_2021_Human",
+             "MSigDB_Hallmark_2020"			# 4
+    )
+    
+    if (websiteLive) { enriched <- enrichr(geneNames, dbs) }
+    
+    for (i in 1:length(dbs)){
+        
+        write.table(enriched[[i]][which(enriched[[i]]$Adjusted.P.value < 0.05),], paste0(fName,"_",dbs[i], ".txt", sep=""), sep = "\t")
+    }
+    
+    
+    
+    message("\n Saving files in current working directory: ", getwd(), "\n")
+    # For plot the GO enrichments
+    #if (websiteLive) plotEnrich(enriched[[3]], showTerms = 20, numChar = 40, y = "Count", orderBy = "P.value")
+    #enriched
+    }
+
+
+plot_from_file <- function(pathDir, fname){
+    require(ggplot2)
+    
+    file = read.table(paste0(pathDir, fname), sep = "\t", header = T, 
+                      stringsAsFactors = F)
+    file = file[ order(file[, c(4)], decreasing = F), ]
+    print(head(file))
+    ggplot(file[1:10, ], aes(x = -log(Adjusted.P.value), y = reorder(Term, -log10(Adjusted.P.value)))) +
+        geom_bar(stat = "identity", fill = "orange", color = "orange") +
+        theme_classic()  
+        
+    ggsave(filename = paste0(pathDir, fname, ".pdf"))
+}
+
+pathDir <- "E:/result/rna_seq_enrichment_EnrichR/"
+plot_from_file(pathDir, "normalUp_MSigDB_Hallmark_2020.txt")
+plot_from_file(pathDir, "cancerUp_MSigDB_Hallmark_2020.txt")
+
 #================================== 
 # Heatmap in R
 #==================================
@@ -1416,6 +1485,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
