@@ -162,6 +162,182 @@ exampleSet <- ExpressionSet(assayData=as.matrix(mat),
                                experimentData=experimentData(test2[[1]]),
                                annotation="hgu95av2")
 
+#=========================================
+# Methylation data analysis; manually downloaded files list
+#=========================================
+
+# all 146 files that were downloaded as the Normal RNA seq data also 
+# contains the matched tumor RNA seq data
+# convert meta data into factor for linear modelling, 
+
+# minfi package was used to preprocess the data and get the beta values
+library(minfi)
+
+rgSet <- read.metharray.exp("TCGA_data/methylation_green_red/00_dataCombine/")
+
+phenoData <- DataFrame("samples" = sampleNames(rgSet))
+phenoData$group <- ifelse(grepl("normal", phenoData$samples), "Normal", "Tumor")
+rownames(phenoData) <- phenoData$samples
+phenoData <- phenoData[sampleNames(rgSet), ]
+match(phenoData$samples, sampleNames(rgSet))
+head(phenoData)
+
+# adding phenotype data to methylation data (rgSet)
+pData(rgSet) <- phenoData
+
+# (1) quality control; needs to done using more than one matric
+
+Mset <- preprocessRaw(rgSet) # nothing done, but the output is MethylSet
+qc_bumphunter <- getQC(Mset) #class 'MethylSet' or 'GenomicMethylSet' required
+plotQC(qc_bumphunter)
+
+# (2) quality control using detection p-values; p-value > 0.05 should be avoided
+
+detP <- detectionP(rgSet)
+# examine mean detection p-values across all samples to identify any failed samples
+barplot(colMeans(detP), las=2, cex.names=0.8, ylab="Mean detection p-values")
+abline(h=0.05,col="red")
+
+# (3) quality Control: The overall density distribution of Beta values for each sample is another useful
+# metric to determine sample quality. Usually, one would expect to see most Beta 
+# values to be either close to 0 or 1, indicating most of the CpG sites in the sample 
+# are unmethylated or methylated. The densityPlot function plots these distribution 
+# for each sample.
+
+phenoData <- pData(MSet)
+densityPlot(Mset, sampGroups = phenoData$group)
+
+# Normalization should be done using Funnorm method if the
+# study comprises of cancer, normal samples.
+#
+grSet <- preprocessFunnorm(rgSet, ratioConvert = T)
+
+
+# Compare with the unnormalized data to visualize the effect of the normalization. 
+# First a comparison of the Beta distributions for the different probe designs. 
+# This will give an indication of the effectiveness of the within-array normalization.
+
+par(mfrow=c(1,1))
+# Plot distributions prior to normalization for sample 1
+plotBetasByType(Mset[,1],main="Raw")
+# The normalized object is a GenomicRatioSet which does not contain
+# the necessary probe info, we need to extract this from the MethylSet first.
+typeI <- getProbeInfo(Mset, type = "I")[, c("Name","nCpG")]
+typeII <- getProbeInfo(Mset, type = "II")[, c("Name","nCpG")]
+probeTypes <- rbind(typeI, typeII)
+probeTypes$Type <- rep(x = c("I", "II"), times = c(nrow(typeI), nrow(typeII)))
+# Now plot the distributions of the normalized data for sample 1
+plotBetasByType(getBeta(grSet)[,1], probeTypes = probeTypes, main="Normalized",)
+
+# Does it look like the normalization brought the distributions closer to each other? 
+# Now let’s # see how the between-array normalization worked…
+
+# visualise what the data looks like before and after normalization
+
+library("RColorBrewer")
+par(mfrow=c(1,2))
+densityPlot(rgSet, sampGroups=phenoData$group,main="Raw", legend=FALSE)
+legend("top", legend = levels(factor(phenoData$group)),
+       text.col=brewer.pal(8,"Dark2"))
+densityPlot(getBeta(grSet), sampGroups=phenoData$group,
+            main="Normalized", legend=FALSE)
+legend("top", legend = levels(factor(phenoData$group)),
+       text.col=brewer.pal(8,"Dark2"))
+
+
+# Filtering
+# Poor performing probes can obscure the biological signals in the data and are 
+# generally filtered out prior to differential methylation analysis. 
+# As the signal from these probes is unreliable, by removing them we perform
+# fewer statistical tests and thus lower the multiple testing penalty. We filter 
+
+# ensure probes are in the same order in the mSetSq and detP objects
+detP <- detectionP(rgSet)
+detP <- detP[match(featureNames(grSet),rownames(detP)),]
+
+# remove any probes that have failed in one or more samples; this next line
+# checks for each row of detP whether the number of values < 0.01 is equal
+# to the number of samples (TRUE) or not (FALSE)
+keep <- rowSums(detP < 0.01) == ncol(grSet)
+table(keep)
+# Subset the GenomicRatioSet
+grSetFlt <- grSet[keep,]
+grSetFlt
+
+# Because the presence of short nucleotide polymorphisms (or SNPs) inside the 
+# probe body or at the nucleotide extension can have important consequences on 
+# the downstream analysis, minfi offers the possibility to remove such probes.
+
+grSetFlt <- dropLociWithSnps(grSetFlt)
+grSetFlt
+
+# Once the data has been filtered and normalised, it is often useful to re-examine 
+# the MDS plots to see if the relationship between the samples has changed. 
+# From the new MDS plots it is apparent that much of the inter-individual variation 
+# has been removed as this is no longer the first principal component, likely due to 
+# the removal of the SNP-affected CpG probes. However, the samples do still cluster 
+# by individual in the second dimension and thus a factor for individual should 
+# still be included in the model.
+
+library('limma')
+library("Gviz")
+library("DMRcate")
+library("DMRcatedata")
+library("stringr")
+library("mCSEA")
+
+
+# set up the grouping variables and colours
+pal <- brewer.pal(8,"Dark2")
+groups <- pal[1:length(unique(phenoData$group))]
+names(groups) <- levels(factor(phenoData$group))
+cols <- groups[as.character(factor(phenoData$group))]
+
+par(mfrow=c(1,2))
+plotMDS(getM(grSetFlt), top=1000, gene.selection="common",
+        col=pal[factor(phenoData$group)], cex=0.8)
+legend("right", legend=levels(factor(phenoData$group)), text.col=pal,
+       cex=0.65, bg="white")
+
+plotMDS(getM(grSetFlt), top=1000, gene.selection="common",
+        col=pal[factor(phenoData$group)])
+legend("right", legend=levels(factor(phenoData$group)), text.col=pal,
+       cex=0.7, bg="white")
+
+
+# create cluster of probes to be analyzed together
+
+
+# grSet_with_beta <- ratioConvert(grSet)
+# grSet_with_beta_grange <- mapToGenome(grSet_with_beta)
+# beta.values <- getBeta(grSet_with_beta)
+# dim(beta.values) # 48551 49
+
+phenoData$group <- relevel(as.factor(phenoData$group), ref = "Normal")
+
+#
+
+cluster_bumphunter <- clusterMaker(grSet, maxGap = 300)
+
+# using Bumphunter
+design_for_bumphunter <- model.matrix(~0 + group, data = phenoData)
+
+parallel_cluster <- makeCluster(6)
+bumphunter_output <- bumphunter(grSet, design = design_for_bumphunter,
+                                coef = 2, pickCutoff = TRUE, nullMethod=c("permutation"), 
+                                B = 49, type = "Beta")
+stopCluster(parallel_cluster)
+
+#=========================================
+# SeSaME package to analyze methylation
+#=========================================
+
+
+library(sesame)
+library(BiocParallel)
+
+
+				 
 #===================================
 # Process multiple files
 #===================================
@@ -1240,6 +1416,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
