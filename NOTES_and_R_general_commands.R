@@ -793,7 +793,29 @@ hm450k.probe2gene <- hm450[res$Probe_ID]
 res.tss <- getNearestTranscript(hm450k.probe2gene)
 res2.annotated.sig.tss2 <- getNearestTSS(res2.annotated.sig.gene)
 
+#==================================
+# GEDI data integration, and batch correction
+#==================================						  
+library(GEDI)
 
+dataFolders <- c("lung_data/",
+                 "datasets/GSE9971_recurrent/GSE9971_RAW/",
+                 "datasets/GSE7880_recurrent/GSE7880_RAW2/")
+
+sources <- c("RNAseq", "affy", "affy")
+
+# Read the data
+PATH_TO_DATA_FOLDERS <- "E:/lung_drug_resistance/"
+datasets <- ReadGE(dataFolders, sources, path = PATH_TO_DATA_FOLDERS)
+
+attr <- c("ensembl_gene_id", "affy_hg_u133a_2" , "affy_hg_focus")
+
+# The datasets are integrated. The species Bos taurus is used
+
+#> due to bug in dbplyr, BiomaRT is not working at this moment.
+
+dat <- GEDI(datasets, attributes = attr, BioMart = TRUE,
+            species = "hsapiens", path = PATH_TO_DATA_FOLDERS)
 #==================================
 # Linear/logistic regression analysis For feature selection
 #==================================
@@ -1199,29 +1221,5 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
