@@ -461,6 +461,53 @@ probs <- predict(model.cv, caret.test, 'prob')
 # bind wtih actual data for easier inspection
 TEST.scored <- cbind(caret.test,class,probs) %>% mutate(data = "TEST")
 
+#==========================
+# Linear modeling related
+#==========================
+# significant difference between models; likelyhood ratio test
+anova(model.cv.f5.glm, model.cv.f4.glm, test = "Chisq")
+anova(model.cv.f3.glm, model.cv.f5.glm, test = "Chisq")
+anova(model.cv.f3.glm, model.cv.f4.glm, test = "Chisq")
+
+lmtest::lrtest(model.cv.f3.glm, model.cv.f1.glm)
+
+# pseudo R-squred R2 test; Most notable is McFadden’s R2, which is defined as 1−[ln(LM)/ln(L0)]
+# where ln(LM) is the log likelihood value for the fitted model and ln(L0) is the 
+# log likelihood for the null model with only an intercept as a predictor. 
+# The measure ranges from 0 to just under 1, with values closer to zero indicating
+# that the model has no predictive power.
+
+pscl::pR2(model.cv.f5) # look for McFadden; if the model trained with glm and not with caret
+
+# Statistical Tests for Individual Predictors
+# Wald Test
+# A wald test is used to evaluate the statistical significance of each coefficient
+# in the model and is calculated by taking the ratio of the square of the
+# regression coefficient to the square of the standard error of the coefficient. 
+# The idea is to test the hypothesis that the coefficient of an independent variable in 
+# the model is significantly different from zero. If the test fails to reject the null hypothesis, 
+# this suggests that removing the variable from the model will not substantially 
+# harm the fit of that model.
+
+survey::regTermTest(model.cv.f5.glm, "ENSG00000169398")
+survey::regTermTest(model.cv.f5.glm, feat5[5])
+survey::regTermTest(model.cv.f3.glm, "ENSG00000169398")
+survey::regTermTest(model.cv.f1.glm, "ENSG00000169398")
+
+
+
+pred <- predict(model.cv.f5, newdata = caret.test)
+accuracy <- table(pred, caret.test[, "status2"])
+sum(diag(accuracy))/sum(accuracy)
+
+confusionMatrix(data=pred, caret.test$status2)# not working
+
+
+# ROC for single variable
+f1 <- pROC::roc(status2 ~ model.cv.f5, data = caret.test) 
+plot(f1)
+
+
 #==================================
 # boxplot
 #==================================
@@ -1015,6 +1062,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
