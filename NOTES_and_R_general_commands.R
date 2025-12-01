@@ -220,6 +220,8 @@ df2_3 <- as.data.table(merge2)[as.data.table(merge1), on = "uniprot"]# allow.car
 # Another way to do multi-merge;
 # Source - https://stackoverflow.com/a/8096127
 reshape::merge_all(list_of_dataframes, ...)
+reshape::merge_recurse(my.list)
+# Speed comparison: the following test shows that merge_all() is the most efficient technique.
 
 #==================================
 # Negation, it should be the part of R-base
@@ -1013,6 +1015,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
