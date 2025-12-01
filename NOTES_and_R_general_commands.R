@@ -213,6 +213,11 @@ df2_3 <- as.data.table(merge2)[as.data.table(merge1), on = "uniprot"]# allow.car
 ## NOTE: If the data is similar, then column binding is more straingt forward, fast and less memory intensive. In this case, create one unique column that has all the enteries that will be used for merging, 
 # and merge that column to all the dataframes. This can create a consistent column-entry for easy cbind() implementation.
 
+
+# Another way to do multi-merge;
+# Source - https://stackoverflow.com/a/8096127
+reshape::merge_all(list_of_dataframes, ...)
+
 #==================================
 # Negation, it should be the part of R-base
 #=================================
@@ -1005,6 +1010,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
