@@ -5,6 +5,8 @@ library(dplyr)
 #===================================
 # General,  
 #===================================
+# Check doParallel package
+
 # data.table fread is faster than regular read.csv
 file <- data.table::fread("file.csv",
 						  sep = "\t", 
@@ -1221,5 +1223,6 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
