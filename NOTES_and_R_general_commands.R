@@ -45,6 +45,23 @@ readxl::read_excel
 
 # If the library is installed, you can access any function from that lib using double colons (::), for example:
 # readxl::read_excel
+
+#===================================
+# multiple word replcement
+#===================================
+library(stringr)
+text <- c("just writing an illustrative text for example,",
+          "but it has some different text in each sentence,",
+          "so I am just gonna replicate it in here.")
+
+wrong_words <-  c("illustrative text", "it in here", "for example")
+new_words <- c("illustrative_text", "it_in_here", "for_example")
+for (i in seq_along(wrong_words)) {
+    text <- str_replace_all(text, wrong_words[i], new_words[i])
+}
+text
+
+
 #===================================
 # No idea
 #===================================
@@ -1223,6 +1240,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
