@@ -49,6 +49,15 @@ readxl::read_excel
 # list function in R package
 ls("package:enrichR")
 
+# In case, log2fc values of 2 diff gene are same, small increase small increment
+#it will add 0.00001 to the second gene of the same log2fc value
+mydata <- mydata %>%
+		group_by(log2fc) %>% 
+		mutate(log2fc2 = log2fc + seq(0, by=0.00001, length.out= n()))
+
+# convert "character to numeric" in data frame
+raw.ad[] <- sapply(raw.ad, as.numeric) ; it preserves both col names and row names, plus it requires [] on left side
+
 #===================================
 # multiple word replcement
 #===================================
@@ -63,7 +72,6 @@ for (i in seq_along(wrong_words)) {
     text <- str_replace_all(text, wrong_words[i], new_words[i])
 }
 text
-
 
 #===================================
 # No idea
@@ -1077,8 +1085,11 @@ unloadNamespace("pscl")
 library(reshape2)
 library(dplyr)
 
+# incase label overlapps in ggplot and ggrepel
+options(ggrepel.max.overlaps = 10)
+
 dds_normCount2[, c(2:21)] %>% 
-    filter(row.names(dds_normCount2) == "ENSG00000132170") %>%
+    filter(row.names(dds_normCount2) == "ENSG00000000170") %>%
     melt() %>% mutate("type" = c(rep("normal", 10), rep("obse", 10))) %>%
     ggplot(aes(x = type, y = log2(value), fill = type)) + 
     geom_errorbar(stat = "summary", width = 0.1, color = "black", alpha = 1.5) +
@@ -1091,23 +1102,15 @@ dds_normCount2[, c(2:21)] %>%
     labs(title="PPARg",
          x ="Type", 
 		 y = "Normalized expression")
-# save figure
-ggsave(filename = "pparg_from_gse162653.pdf", plot = )
 
-#plot a barplot for top 10 enriched terms ordered by q-values
+# save figure; can auto save the last generated plot
+ggsave(filename = "pparg_from_gse162653.pdf", 
+	   plot = get_last_plot()) # or the plot name
+
+# plot a barplot for top 10 enriched terms ordered by q-values
 ggplot(cpGO_df[1:10, ], aes(x = -log10(qvalue[1:10]), y =  reorder(Description[1:10], -log10(qvalue[1:10]) )) + 
 	geom_bar(stat = "identity") + 
 	theme_classic()
-
-# incase label overlapps in ggplot and ggrepel
-options(ggrepel.max.overlaps = 10)
-
-# In case, log2fc values of 2 diff gene are same, small increase small increment
-#it will add 0.00001 to the second gene of the same log2fc value
-mydata <- mydata %>%
-		group_by(log2fc) %>% 
-		mutate(log2fc2 = log2fc + seq(0, by=0.00001, length.out= n()))
-
 
 # create a star bust plot 
 ggplot(data = deg_dm, aes(x = Est_groupTumor, y = log2FoldChange)) + 
@@ -1116,9 +1119,9 @@ ggplot(data = deg_dm, aes(x = Est_groupTumor, y = log2FoldChange)) +
     geom_vline(xintercept = c(0.3, -0.3), linetype = "dashed", color = "blue") +
     scale_x_continuous(breaks = c(0, 0.3, -0.3), minor_breaks=NULL) +
     scale_y_continuous(breaks = c(seq(0,8,2), seq(0,-8,-2)), minor_breaks=NULL) +
-    xlab("Methylation differences") + ylab("log2FoldChange")+
+    xlab("Methylation differences") + 
+	   ylab("log2FoldChange") +
     theme_bw()  	   
-
 
 plist <- list()
 for (i in list.files("results_and_fingures/", 
@@ -1137,16 +1140,14 @@ for (i in list.files("results_and_fingures/",
 
     plist[[i]] <- ggplot(first[1:10, ], aes(x = -log10(Adjusted.P.value[1:10]), y =  reorder(Term[1:10], -log10(Adjusted.P.value[1:10])))) + 
         geom_bar(stat = "identity", fill = "coral3") + 
-        theme_classic() + 
-        xlab("-log10(adj.p-value") + 
-        ylab("Term") + 
+        theme_classic() 			+ 
+        xlab("-log10(adj.p-value")	+ 
+        ylab("Term") 				+ 
         scale_y_discrete(labels = function(x) {
             is_long <- nchar(x) > 25
-            x[is_long] <- paste0(substr(x[is_long], 1, 25), ".") # this can trim the label, from very long to a reasonable lenght
-            x
-        }) +
+            x[is_long] <- paste0(substr(x[is_long], 1, 25), ".") # this can trim the label, from very long to a reasonable length
+            x }) +
         ggtitle(title)
-
 }
 
 #===================================================
@@ -1156,11 +1157,10 @@ for (i in list.files("results_and_fingures/",
 #install.packages("enrichR")
 library(enrichR)
 
-#by default, species == human 
-
-#Then find the list of all available databases from Enrichr.
-#dbs <- listEnrichrDbs()
-#listEnrichrSites()
+# by default, species == human 
+# Then find the list of all available databases from Enrichr.
+# dbs <- listEnrichrDbs()
+# listEnrichrSites()
 
 enrichr_GO <- function(geneNames, fName) {
     
@@ -1177,15 +1177,12 @@ enrichr_GO <- function(geneNames, fName) {
         
         write.table(enriched[[i]][which(enriched[[i]]$Adjusted.P.value < 0.05),], paste0(fName,"_",dbs[i], ".txt", sep=""), sep = "\t")
     }
-    
-    
-    
+     
     message("\n Saving files in current working directory: ", getwd(), "\n")
     # For plot the GO enrichments
     #if (websiteLive) plotEnrich(enriched[[3]], showTerms = 20, numChar = 40, y = "Count", orderBy = "P.value")
     #enriched
     }
-
 
 plot_from_file <- function(pathDir, fname){
     require(ggplot2)
@@ -1201,7 +1198,7 @@ plot_from_file <- function(pathDir, fname){
     ggsave(filename = paste0(pathDir, fname, ".pdf"))
 }
 
-pathDir <- "E:/result/rna_seq_enrichment_EnrichR/"
+pathDir <- "result/rna_seq_enrichment_EnrichR/"
 plot_from_file(pathDir, "normalUp_MSigDB_Hallmark_2020.txt")
 plot_from_file(pathDir, "cancerUp_MSigDB_Hallmark_2020.txt")
 
@@ -1225,8 +1222,6 @@ ComplexHeatmap::Heatmap(as.matrix(hm.all2[1:10,]),
 #==================================
 #
 #==================================
-# convert character to numeric in data frame
-raw.ad[] <- sapply(raw.ad, as.numeric) ; it preserves both col names and row names, plus it requires [] on left side
 
 
 #==================================
@@ -1506,6 +1501,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
