@@ -58,6 +58,12 @@ mydata <- mydata %>%
 # convert "character to numeric" in data frame
 raw.ad[] <- sapply(raw.ad, as.numeric) ; it preserves both col names and row names, plus it requires [] on left side
 
+# drop columns that have 1 factor level
+df[sapply(df, nlevels) > 1]
+
+# compare all files in the list
+outer(allFiles, allFiles, Vectorize(all.equal))
+
 #===================================
 # multiple word replcement
 #===================================
@@ -85,6 +91,23 @@ samples2 <- grep("Unshared.", samples, value =T)
 samples2 <- str_remove(samples2, "Unshared.Log.QC2_LateStageTumor_pool.QC1")
 samples2 <- samples2[nzchar(samples2)] # nzchar is a fast way to find out if elements of a character vector are non-empty strings.
 
+
+# string split or you can remove the remaining part from ENSEMBL name, the version of ensembl id such as ENSG0000000000012.3. Remove .3, otherwise megeing will be difficult.
+rownames(df) <- sub("\\..*", "", rownames(df)) # gsub()
+
+# strsplit use case
+# If you need to extract the first (or nth) entry from each split, use:
+word <- c('apple-orange-strawberry','chocolate')
+sapply(strsplit(word,"-"), `[`, 1)
+#[1] "apple"     "chocolate"
+
+# Or faster and more explictly:
+vapply(strsplit(word,"-"), `[`, 1, FUN.VALUE=character(1))
+#[1] "apple"     "chocolate"
+
+# Both bits of code will cope well with selecting whichever value in the split list, and will deal with cases that are outside the range:
+vapply(strsplit(word,"-"), `[`, 2, FUN.VALUE=character(1))
+#[1] "orange" NA  
 
 #===================================
 # t-test rowwise (Welch t-test) and STATISTICAL tests
@@ -151,6 +174,24 @@ head(top.table, 20)
 # create expression set for GEOquery 
 # it was a test, but the GEO data is very unpredictable/messsy
 # making it really hard to convert it into ExpressionSet
+
+# for annotating hgu133plus2 Affymatrix data set
+# BiocManager::install("hgu133plus2probe") for annotation
+# BiocManager::install("gcrma")
+# BiocManager::install("hgu133plus2cdf")
+# BiocManager::install("hgu133plus2.db")
+
+# for geo data
+gset <- getGEO("GSE12056", GSEMatrix =TRUE, getGPL=FALSE)
+if (length(gset) > 1) idx <- grep("GPL570", attr(gset, "names")) else idx <- 1
+gset <- gset[[idx]]
+
+# mapping between human genome and illumine platforms (reference: https://github.com/AlexsLemonade/refinebio/issues/232)
+# I've just gone through the human platforms. Here's a Bioconductor package to platform name mapping that I think should work:
+illuminaHumanv1.db: Illumina Human-6 v1.0, Illumina HumanRef-8 v1.0
+illuminaHumanv2.db: Illumina Human-6 V2.0, Illumina HumanRef-8 v2.0
+illuminaHumanv3.db: Illumina HumanHT-12 V3.0, Illumina HumanRef-8 v3.0, Illumina HumanWG-6 V3.0
+illuminaHumanv4.db: Illumina HumanHT-12 V4.0
 
 #get data from GEO
 geo_data <- getGEO(GEO = "GSE12456",
@@ -353,6 +394,11 @@ library(BiocParallel)
 #===================================
 # Make a function to process each file, file name or identifier has to be appended to the respective columns. 
 # after that, using sapply, this function can be used to all the files.
+
+allFiles <- lapply(listOfFiles, function(x) readr::read_tsv(x,
+                                                col_names = T,
+                                                skip_empty_rows = T,
+                                                trim_ws = TRUE)
 
 # pattern based matching and retreiving the data
 output1 <- Sys.glob("NCC_*_Proteome_KU_*\\OUTPUT\\")
@@ -947,23 +993,6 @@ for (i in 1:108) {
     }
 }
 
-
-# ggplot ggplot2 
-ggplot(data = deg_dm, aes(x = Est_groupTumor, y = log2FoldChange)) + 
-    geom_point(colour = "white", shape = 21, size = 2, aes(fill = factor(dataType))) + 
-    theme_classic() + 
-    geom_hline(yintercept = c(1, -1), linetype = "dashed", color = "red") + 
-    geom_vline(xintercept = c(0.3, -0.3), linetype = "dashed", color = "blue") +
-    scale_x_continuous(breaks = c(0, 0.3, -0.3), minor_breaks=NULL) +
-    scale_y_continuous(breaks = c(seq(0,8,2), seq(0,-8,-2)), minor_breaks=NULL) +
-    xlab("Methylation differences") + ylab("log2FoldChange")
-
-
-        geom_boxplot() +  				# creating box plot
-        geom_dotplot(binaxis='y', stackdir='center', 	# craeting dot plot
-                     stackratio=1.5, dotsize=1.2) + 
-
-
 #==================================
 # migrate R libraries, move R libraries, install R libraries
 #==================================
@@ -1123,6 +1152,21 @@ ggplot(data = deg_dm, aes(x = Est_groupTumor, y = log2FoldChange)) +
 	   ylab("log2FoldChange") +
     theme_bw()  	   
 
+# ggplot; volcano plot in ggplot2
+ggplot(data = deg_dm, aes(x = Est_groupTumor, y = log2FoldChange)) + 
+    geom_point(colour = "white", shape = 21, size = 2, aes(fill = factor(dataType))) + 
+    theme_classic() + 
+    geom_hline(yintercept = c(1, -1), linetype = "dashed", color = "red") + 
+    geom_vline(xintercept = c(0.3, -0.3), linetype = "dashed", color = "blue") +
+    scale_x_continuous(breaks = c(0, 0.3, -0.3), minor_breaks=NULL) +
+    scale_y_continuous(breaks = c(seq(0,8,2), seq(0,-8,-2)), minor_breaks=NULL) +
+    xlab("Methylation differences") + ylab("log2FoldChange")
+	   
+	geom_boxplot() +  				# creating box plot
+    geom_dotplot(binaxis='y', stackdir='center', 	# craeting dot plot
+                     stackratio=1.5, dotsize=1.2) + 
+
+# create plots from files
 plist <- list()
 for (i in list.files("results_and_fingures/", 
                      pattern = "GO_Biological", 
@@ -1135,7 +1179,7 @@ for (i in list.files("results_and_fingures/",
         stringr::str_split_i(title, pattern = "_", 1)
     } else { }
     
-    print(title)
+    print(title) # it should be cat()
     first <- read.csv(i, sep = "\t", header = T, stringsAsFactors = F)[, c(1,4)]
 
     plist[[i]] <- ggplot(first[1:10, ], aes(x = -log10(Adjusted.P.value[1:10]), y =  reorder(Term[1:10], -log10(Adjusted.P.value[1:10])))) + 
@@ -1206,7 +1250,7 @@ plot_from_file(pathDir, "cancerUp_MSigDB_Hallmark_2020.txt")
 # Heatmap in R
 #==================================
 
-# for heatmap
+# for heatmap; need to create a comprehensive structure
 heatmap ==> default or from base
 
 pheatmap::pheatmap(exprs(Normalize2), 
@@ -1218,11 +1262,6 @@ ComplexHeatmap::Heatmap(as.matrix(hm.all2[1:10,]),
                         column_dend_side = "top",
                         col = circlize::colorRamp2(c(-3, 0, 3), c("Darkblue", "white", "red")),
                         heatmap_legend_param = list(color_bar = "continuous"))
-
-#==================================
-#
-#==================================
-
 
 #==================================
 # nested ifelse
@@ -1246,70 +1285,14 @@ ifelse(<condition>, <yes>,
               ifelse(<condition>, <yes>, <no>)
              ) )
 
-
-# string split or you can remove the remaining part from ENSEMBL name, the version of ensembl id such as ENSG0000000000012.3. Remove .3, otherwise megeing will be difficult.
-rownames(df) <- sub("\\..*", "", rownames(df))
-
-strsplit use case
-If you need to extract the first (or nth) entry from each split, use:
-word <- c('apple-orange-strawberry','chocolate')
-sapply(strsplit(word,"-"), `[`, 1)
-#[1] "apple"     "chocolate"
-
-Or faster and more explictly:
-
-vapply(strsplit(word,"-"), `[`, 1, FUN.VALUE=character(1))
-#[1] "apple"     "chocolate"
-
-Both bits of code will cope well with selecting whichever value in the split list, and will deal with cases that are outside the range:
-
-vapply(strsplit(word,"-"), `[`, 2, FUN.VALUE=character(1))
-#[1] "orange" NA  
-
-
-#drop columns that have 1 factor level
-df[sapply(df, nlevels) > 1]
-
+#==================================
 # for Geometric Mean calculation
+#==================================
+exp(mean(log(x))) 
 
-exp(mean(log(x))) # this and the foloowing function is same
-
-"geometric.mean" <- 
-function(x, na.rm=TRUE) { 
-		exp(mean(log(x),na.rm=na.rm))
-						}
-
-
-# compare all files in the list
-outer(allFiles, allFiles, Vectorize(all.equal))
-
-allFiles <- lapply(listOfFiles, function(x) readr::read_tsv(x,
-                                                col_names = T,
-                                                skip_empty_rows = T,
-                                                trim_ws = TRUE)
-
-
-# for annotating hgu133plus2 Affymatrix data set
-# BiocManager::install("hgu133plus2probe") for annotation
-# BiocManager::install("gcrma")
-# BiocManager::install("hgu133plus2cdf")
-# BiocManager::install("hgu133plus2.db")
-
-# for geo data
-gset <- getGEO("GSE12056", GSEMatrix =TRUE, getGPL=FALSE)
-if (length(gset) > 1) idx <- grep("GPL570", attr(gset, "names")) else idx <- 1
-gset <- gset[[idx]]
-
-
-# mapping between human genome and illumine platforms (reference: https://github.com/AlexsLemonade/refinebio/issues/232)
-
-# I've just gone through the human platforms. Here's a Bioconductor package to platform name mapping that I think should work:
-
-illuminaHumanv1.db: Illumina Human-6 v1.0, Illumina HumanRef-8 v1.0
-illuminaHumanv2.db: Illumina Human-6 V2.0, Illumina HumanRef-8 v2.0
-illuminaHumanv3.db: Illumina HumanHT-12 V3.0, Illumina HumanRef-8 v3.0, Illumina HumanWG-6 V3.0
-illuminaHumanv4.db: Illumina HumanHT-12 V4.0
-
+# this and the foloowing function is same or in function from
+geometric.mean <- function(x, na.rm=TRUE) { 
+		exp(mean(log(x),na.rm=na.rm))		}
 
 #==================================
 # Install new fonts in R
@@ -1501,6 +1484,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
