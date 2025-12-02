@@ -736,10 +736,9 @@ auc_check2 <- function(model,
 {
     
     require(dplyr)
-    library(yardstick)
+    require(yardstick)
     class <- predict(model, testData)
-    probs <- predict(model, testData, "prob") # 
-    
+    probs <- predict(model, testData, "prob")
     
     TEST.scored <- cbind(testData, class, probs) %>% 
         mutate(data = "TEST")
@@ -768,10 +767,41 @@ auc_check2(model.cv.f5, caret.test, caret.train, targetClass = "status2")
 pred.prob <- predict(model.cv.f5, newdata = caret.test, type = "raw")
 caret::confusionMatrix(data = pred.prob, caret.test$status2, positive = "Rec")
 
+#==================================
+# ROC curve in R
+#==================================
+library(pROC)
 
-#
-# TO calculate the Brier Score
-#
+roc.cg00074348 <- pROC::roc(data = betas.fs.2, 
+		response = "sampleType",
+		predictor = "cg00074348",
+		ret = c("roc", "coords", "all_coords"),
+		ci = TRUE, plot = TRUE)
+
+pROC::plot.roc(roc.cg00049664,
+	xlim=if(roc.cg00049664$percent){c(100, 0)} else{c(1, 0)},
+	ylim=if(roc.cg00049664$percent){c(0, 100)} else{c(0, 1)})
+
+roc.cg <- pROC::roc(data = test, #betas2.fs, 
+		response = "sampleType",
+		predictor = "y_pred",
+		ret = c("roc", "coords", "all_coords"),
+		ci = TRUE, plot = TRUE)
+
+pROC::plot.roc(roc.cg,
+	xlim=if(roc.cg$percent){c(100, 0)} else{c(0, 1)},
+	ylim=if(roc.cg$percent){c(100, 0)} else{c(0, 1)})
+
+
+roc_df <- data.frame(
+  TPR=rev(roc.cg$sensitivities), 
+  FPR=rev(1 - roc.cg$specificities), 
+  labels=roc.cg$response, 
+  scores=roc.cg$predictor)						
+
+#====================================
+# Brier Score calculation
+#====================================
 
 calcBrierScore <- function(model, 
                            testdata = "testData",
@@ -794,9 +824,8 @@ calcBrierScore <- function(model,
 
 calcBrierScore(model.cv.f5, testdata = caret.test)
 
-#https://stackoverflow.com/questions/61014688/r-caret-package-brier-score
-
-#I use the Brier score to tune my models in caret for binary classification. 
+# https://stackoverflow.com/questions/61014688/r-caret-package-brier-score
+# I use the Brier score to tune my models in caret for binary classification. 
 # I ensure that the "positive" class is the second class, which is the default when 
 # you label your response "0:1". Then I created this master summary function, 
 # based on caret's own suite of summary functions, to return all the metrics I want to see:
@@ -817,7 +846,6 @@ BigSummary <- function (data, lev = NULL, model = NULL) {
     } else {
         rocObject$auc
     }
-    
     tmp <- unlist(e1071::classAgreement(table(data$obs,
                                               data$pred)))[c("diag", "kappa")]
     out <- c(Acc = tmp[[1]],
@@ -836,7 +864,7 @@ BigSummary <- function (data, lev = NULL, model = NULL) {
     out
 }
 
-#Now I can simply pass  summaryFunction = BigSummary in trainControl and then 
+# Now I can simply pass  summaryFunction = BigSummary in trainControl and then 
 # metric = "Brier", maximize = FALSE in the train call.
 						
 #==================================
@@ -936,38 +964,6 @@ save(save.pkg.list, file="pkglist.Rdata")
 
 load("pkglist.Rdata")
 install.packages(save.pkg.list)
-
-#==================================
-# ROC curve in R
-#==================================
-library(pROC)
-
-roc.cg00074348 <- pROC::roc(data = betas.fs.2, 
-		response = "sampleType",
-		predictor = "cg00074348",
-		ret = c("roc", "coords", "all_coords"),
-		ci = TRUE, plot = TRUE)
-
-pROC::plot.roc(roc.cg00049664,
-	xlim=if(roc.cg00049664$percent){c(100, 0)} else{c(1, 0)},
-	ylim=if(roc.cg00049664$percent){c(0, 100)} else{c(0, 1)})
-
-roc.cg <- pROC::roc(data = test, #betas2.fs, 
-		response = "sampleType",
-		predictor = "y_pred",
-		ret = c("roc", "coords", "all_coords"),
-		ci = TRUE, plot = TRUE)
-
-pROC::plot.roc(roc.cg,
-	xlim=if(roc.cg$percent){c(100, 0)} else{c(0, 1)},
-	ylim=if(roc.cg$percent){c(100, 0)} else{c(0, 1)})
-
-
-roc_df <- data.frame(
-  TPR=rev(roc.cg$sensitivities), 
-  FPR=rev(1 - roc.cg$specificities), 
-  labels=roc.cg$response, 
-  scores=roc.cg$predictor)
 
 #==================================
 # InfiniumMethylation lib to convert probe id to gene 
@@ -1512,6 +1508,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
