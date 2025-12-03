@@ -952,9 +952,9 @@ cbind.fill <- function(...) {
 							}
 
 #==================================
-# package version and unloading of package. 
+# package version and unloading of package.
 #==================================						  
-
+# It does not work though,
 # Unload name space, remove package from environment, unload
 unloadNamespace("TCGAbiolinks")
 detach("package:TCGAbiolinks", unload = TRUE, force = TRUE)
@@ -1090,7 +1090,7 @@ roc_df <- data.frame(
   scores=roc.cg$predictor)
 
 #==================================
-# Plot various aspects in linear/log regression
+# Plot various aspects of linear/log regression such as residual plot etc.
 #==================================
 
 # needs to updat
@@ -1459,9 +1459,6 @@ setColToRow <- function(df = df,
     }
 }
 
-
-
-
 #=========================================
 # add snippet to the RStudio
 #=========================================
@@ -1484,15 +1481,4 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
-
-
-
-
-
-
-
-
-
-
-
 
