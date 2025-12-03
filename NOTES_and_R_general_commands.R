@@ -674,8 +674,8 @@ y_train = caret.train[,  length(dresist_lung_corr75)]
 
 control_rfe = rfeControl(functions = rfFuncs, 	# random forest
                          method = "repeatedcv", # repeated cv
-                         repeats = 10, 		# number of repeats
-                         number =  10) 		# number of folds
+                         repeats = 10, 			# number of repeats
+                         number =  10) 			# number of folds
 
 # Performing RFE
 result_rfe = rfe(x = x_train, 
@@ -784,7 +784,6 @@ auc_check <- function(testModel,
 }
 
 auc_check(testModel = model.cv.f5, testData = caret.train, plot = FALSE)
-
 
 auc_check2 <- function(model, 
                        testData, 
@@ -952,9 +951,9 @@ cbind.fill <- function(...) {
 							}
 
 #==================================
-# package version and unloading of package.
+# Unloading of package.
 #==================================						  
-# It does not work though,
+# It does not work though, especially, when updating/installting packages are being used in the environment.
 # Unload name space, remove package from environment, unload
 unloadNamespace("TCGAbiolinks")
 detach("package:TCGAbiolinks", unload = TRUE, force = TRUE)
@@ -1481,4 +1480,5 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
