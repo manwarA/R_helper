@@ -119,6 +119,36 @@ registerDoSEQ()
 # another option is
 parallel::parLapply(cl, 1:ncol(genes_list), surv_func, genes_list, survival_data, chunk.size = 12)
 
+#=========================================
+# Survival analysis
+#=========================================
+library(survival)
+coxph(Surv(time = days, 
+           event = as.numeric(as.character(vital_status_0alive_1dead)), 
+             type = "right") ~ gene1 + gene2 + gene1:gene2, data = survival_data) # gene1:gene2 is an interaction term
+				   
+# survival analysis parallel
+library(survival)
+library(RegParallel)
+
+res <- RegParallel(
+  data = vsd_survival,
+  formula = 'Surv(vital_status_0alive_1dead, days_to_death_2) ~ [*]',
+  FUN = function(formula, data)
+    coxph(formula = formula,
+          data = data,
+          ties = 'breslow',
+          singular.ok = TRUE),
+  FUNtype = 'coxph',
+  variables = colnames(vsd_survival)[1:32056], #c("vital_status_0alive_1dead", "days_to_death_2"), #colnames(vsd_survival)[ncol(vsd_survival)-1:ncol(vsd_survival)],
+  blocksize = 2000,
+  cores = 2,
+  nestedParallel = FALSE,
+  conflevel = 95)
+
+res <- res[!is.na(res$P),]
+res
+
 #===================================
 # No idea
 #===================================
@@ -1373,36 +1403,6 @@ loadfonts(device = "win")
     scale_shape_manual(values = c(1)) + 
     scale_color_manual(values = c("darkorange2", "dodgerblue4", "green")) +
     theme_classic()
-  
-#=========================================
-# Survival analysis
-#=========================================
-library(survival)
-coxph(Surv(time = days, 
-           event = as.numeric(as.character(vital_status_0alive_1dead)), 
-             type = "right") ~ gene1 + gene2 + gene1:gene2, data = survival_data) # gene1:gene2 is an interaction term
-				   
-# survival analysis parallel
-library(survival)
-library(RegParallel)
-
-res <- RegParallel(
-  data = vsd_survival,
-  formula = 'Surv(vital_status_0alive_1dead, days_to_death_2) ~ [*]',
-  FUN = function(formula, data)
-    coxph(formula = formula,
-          data = data,
-          ties = 'breslow',
-          singular.ok = TRUE),
-  FUNtype = 'coxph',
-  variables = colnames(vsd_survival)[1:32056], #c("vital_status_0alive_1dead", "days_to_death_2"), #colnames(vsd_survival)[ncol(vsd_survival)-1:ncol(vsd_survival)],
-  blocksize = 2000,
-  cores = 2,
-  nestedParallel = FALSE,
-  conflevel = 95)
-
-res <- res[!is.na(res$P),]
-res
 
 #========================================
 # helper function to select one column, while analyzing TCGA data
@@ -1520,6 +1520,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
