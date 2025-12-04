@@ -5,8 +5,13 @@ library(dplyr)
 #===================================
 # General,  
 #===================================
-# Check doParallel | Parallel | doMC package
+# Check doParallel | Parallel | doMC SNOW | Snowfall package
 # foreach
+
+# create cluster first,
+# load all the required lib and dataset to those cores in cluster
+# then using foreach, run calculation on each node.
+
 
 # data.table fread is faster than regular read.csv
 file <- data.table::fread("file.csv",
@@ -1481,6 +1486,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
