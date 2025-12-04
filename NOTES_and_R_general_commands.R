@@ -5,45 +5,6 @@ library(dplyr)
 #===================================
 # General,  
 #===================================
-# Check doParallel | Parallel | doMC SNOW | Snowfall package
-# foreach
-
-# create cluster first,
-# load all the required lib and dataset to those cores in cluster
-# then using foreach, run calculation on each node.
-
-
-# simple "makeCluster" did make clusters but the output of foreach was not good under win11. Although, 
-# in this setting, all cores were engaged duing computation. 
-# by changin this to "makePSOCKcluster", the result was as expected, however, only single core was used. 
-
-cl <- makePSOCKcluster(detectCores() - 4) 
-registerDoParallel(cl)
-
-# Export required variables/packages to workers
-clusterExport(cl, 
-              varlist = c("surv_func", "genes_list", "survival_data"),
-              envir = environment())
-
-clusterEvalQ(cl, library(survival))
-# Initially, did not create the function, however, while troubleshooting, I saw it in a function form, so:
-parallel_fun <- function(){
-  foreach(i = 1:ncol(genes_list), 
-		  .combine = rbind, 
-		  .packages = c("doParallel","survival")) %dopar%
-    {
-     surv_func(gene_pairs = degs_genes_test_pair[, i], df_surv = vsd_survival) # a custom function to do survival analysis
-    }
-  }
-
-parallel_fun()
-# Stop the cluster
-stopCluster(cl)
-registerDoSEQ()
-
-# another option is
-parallel::parLapply(cl, 1:ncol(genes_list), surv_func, genes_list, survival_data, chunk.size = 12)
-
 # data.table fread is faster than regular read.csv
 file <- data.table::fread("file.csv",
 						  sep = "\t", 
@@ -115,6 +76,48 @@ for (i in seq_along(wrong_words)) {
     text <- str_replace_all(text, wrong_words[i], new_words[i])
 }
 text
+
+#===================================
+# Parallel processing in R (under Windows)
+#===================================
+# Check doParallel | Parallel | doMC SNOW | Snowfall package
+# foreach
+
+# create cluster first,
+# load all the required lib and dataset to those cores in cluster
+# then using foreach, run calculation on each node.
+
+
+# simple "makeCluster" did make clusters but the output of foreach was not good under win11. Although, 
+# in this setting, all cores were engaged duing computation. 
+# by changin this to "makePSOCKcluster", the result was as expected, however, only single core was used. 
+
+cl <- makePSOCKcluster(detectCores() - 4) 
+registerDoParallel(cl)
+
+# Export required variables/packages to workers
+clusterExport(cl, 
+              varlist = c("surv_func", "genes_list", "survival_data"),
+              envir = environment())
+
+clusterEvalQ(cl, library(survival))
+# Initially, did not create the function, however, while troubleshooting, I saw it in a function form, so:
+parallel_fun <- function(){
+  foreach(i = 1:ncol(genes_list), 
+		  .combine = rbind, 
+		  .packages = c("doParallel","survival")) %dopar%
+    {
+     surv_func(gene_pairs = degs_genes_test_pair[, i], df_surv = vsd_survival) # a custom function to do survival analysis
+    }
+  }
+
+parallel_fun()
+# Stop the cluster
+stopCluster(cl)
+registerDoSEQ()
+
+# another option is
+parallel::parLapply(cl, 1:ncol(genes_list), surv_func, genes_list, survival_data, chunk.size = 12)
 
 #===================================
 # No idea
@@ -1517,6 +1520,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
