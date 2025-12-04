@@ -3,7 +3,7 @@ library(dplyr)
 
 # This is for general history and commands list
 #===================================
-# General,  
+# General
 #===================================
 # data.table fread is faster than regular read.csv
 file <- data.table::fread("file.csv",
@@ -80,13 +80,13 @@ text
 #===================================
 # Parallel processing in R (under Windows)
 #===================================
-# Check doParallel | Parallel | doMC SNOW | Snowfall package
+# For simple task, it is fine, for others, use linux
+# Check doParallel | Parallel | doMC SNOW | Snowfall | future "package"
 # foreach
 
 # create cluster first,
 # load all the required lib and dataset to those cores in cluster
 # then using foreach, run calculation on each node.
-
 
 # simple "makeCluster" did make clusters but the output of foreach was not good under win11. Although, 
 # in this setting, all cores were engaged duing computation. 
@@ -112,6 +112,7 @@ parallel_fun <- function(){
   }
 
 parallel_fun()
+
 # Stop the cluster
 stopCluster(cl)
 registerDoSEQ()
@@ -123,24 +124,25 @@ parallel::parLapply(cl, 1:ncol(genes_list), surv_func, genes_list, survival_data
 # Survival analysis
 #=========================================
 library(survival)
-coxph(Surv(time = days, 
-           event = as.numeric(as.character(vital_status_0alive_1dead)), 
-             type = "right") ~ gene1 + gene2 + gene1:gene2, data = survival_data) # gene1:gene2 is an interaction term
-				   
-# survival analysis parallel
-library(survival)
 library(RegParallel)
 
+# The general term of survival analysis is as follow:
+coxph(Surv(time = days, # time to event
+           event = as.numeric(as.character(vital_status_0alive_1dead)), # the occurnace of event or censoring.
+             type = "right") ~ gene1 + gene2 + gene1:gene2, # gene1:gene2 is an interaction term
+	  data = survival_data) 	# the col names "days", "vital_status_0alive_1dead" and gene names should be in data.
+				   
+# RegParallel developed by Kevin Beligh. 
 res <- RegParallel(
   data = vsd_survival,
-  formula = 'Surv(vital_status_0alive_1dead, days_to_death_2) ~ [*]',
+  formula = 'Surv(vital_status_0alive_1dead, days_to_death) ~ [*]',
   FUN = function(formula, data)
     coxph(formula = formula,
           data = data,
           ties = 'breslow',
           singular.ok = TRUE),
   FUNtype = 'coxph',
-  variables = colnames(vsd_survival)[1:32056], #c("vital_status_0alive_1dead", "days_to_death_2"), #colnames(vsd_survival)[ncol(vsd_survival)-1:ncol(vsd_survival)],
+  variables = colnames(vsd_survival), 
   blocksize = 2000,
   cores = 2,
   nestedParallel = FALSE,
@@ -1520,6 +1522,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
