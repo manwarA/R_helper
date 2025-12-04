@@ -12,36 +12,37 @@ library(dplyr)
 # load all the required lib and dataset to those cores in cluster
 # then using foreach, run calculation on each node.
 
-cl <- makePSOCKcluster(detectCores() - 4) # simple "makeCluster" did make clusters but the output of foreach was not good under win11.
+
+# simple "makeCluster" did make clusters but the output of foreach was not good under win11. Although, 
+# in this setting, all cores were engaged duing computation. 
+# by changin this to "makePSOCKcluster", the result was as expected, however, only single core was used. 
+
+cl <- makePSOCKcluster(detectCores() - 4) 
 registerDoParallel(cl)
 
 # Export required variables/packages to workers
-
 clusterExport(cl, 
-              varlist = c("surv_func", "degs_genes_test_pair", "vsd_survival"),
+              varlist = c("surv_func", "genes_list", "survival_data"),
               envir = environment())
 
 clusterEvalQ(cl, library(survival))
-
-my_parr_fun <- function(){
-  foreach(i = 1:ncol(degs_genes_test_pair), .multicombine = TRUE, .combine = rbind, .packages = c("doParallel","survival")) %dopar%
-    { 
-      surv_func(gene_pairs = degs_genes_test_pair[, i], df_surv = vsd_survival)
-      
+# Initially, did not create the function, however, while troubleshooting, I saw it in a function form, so:
+parallel_fun <- function(){
+  foreach(i = 1:ncol(genes_list), 
+		  .combine = rbind, 
+		  .packages = c("doParallel","survival")) %dopar%
+    {
+     surv_func(gene_pairs = degs_genes_test_pair[, i], df_surv = vsd_survival) # a custom function to do survival analysis
     }
   }
 
-system.time(my_parr_fun())
-res_psock_surv <- my_parr_fun()
-
-
-# parLapply(cl, 1:ncol(degs_genes_test_pair), surv_func, degs_genes_test_pair, vsd_survival, chunk.size = 12)
-
+parallel_fun()
 # Stop the cluster
 stopCluster(cl)
 registerDoSEQ()
 
-
+# another option is
+parallel::parLapply(cl, 1:ncol(genes_list), surv_func, genes_list, survival_data, chunk.size = 12)
 
 # data.table fread is faster than regular read.csv
 file <- data.table::fread("file.csv",
@@ -1516,6 +1517,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
