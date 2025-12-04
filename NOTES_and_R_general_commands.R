@@ -5,7 +5,8 @@ library(dplyr)
 #===================================
 # General,  
 #===================================
-# Check doParallel package
+# Check doParallel | Parallel | doMC package
+# foreach
 
 # data.table fread is faster than regular read.csv
 file <- data.table::fread("file.csv",
@@ -1480,5 +1481,6 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
