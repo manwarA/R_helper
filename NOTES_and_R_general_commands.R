@@ -152,16 +152,15 @@ res <- res[!is.na(res$P),]
 res
 
 #===================================
-# No idea
+# No idea, String manipulation
 #===================================
 # string manipulation, regrex,  what for?
 samples <- gsub("(?<=QC1)[^;]*", "", samples, perl = TRUE)
 samples2 <- grepl("Unshared", samples2) 	# returns logical vector
 sum(grepl("LateStageTumor_pool.QC1", samples))
-samples2 <- grep("Unshared.", samples, value =T)
+samples2 <- grep("Unshared.", samples, value =T) # returns index or value of the term (if value=T)
 samples2 <- str_remove(samples2, "Unshared.Log.QC2_LateStageTumor_pool.QC1")
 samples2 <- samples2[nzchar(samples2)] # nzchar is a fast way to find out if elements of a character vector are non-empty strings.
-
 
 # string split or you can remove the remaining part from ENSEMBL name, the version of ensembl id such as ENSG0000000000012.3. Remove .3, otherwise megeing will be difficult.
 rownames(df) <- sub("\\..*", "", rownames(df)) # gsub()
@@ -1521,6 +1520,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
