@@ -81,7 +81,7 @@ text
 # Parallel processing in R (under Windows)
 #===================================
 # For simple task, it is fine, for others, use linux
-# Check doParallel | Parallel | doMC SNOW | Snowfall | future "package"
+# Check doParallel | Parallel | doMC SNOW | Snowfall | future "package" | BiocParallel
 # foreach
 
 # create cluster first,
@@ -1521,6 +1521,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
