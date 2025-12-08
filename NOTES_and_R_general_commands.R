@@ -156,9 +156,8 @@ res
 #===================================
 # string manipulation, regrex,  what for?
 samples <- gsub("(?<=QC1)[^;]*", "", samples, perl = TRUE)
-samples2 <- grepl("Unshared", samples2)
+samples2 <- grepl("Unshared", samples2) 	# returns logical vector
 sum(grepl("LateStageTumor_pool.QC1", samples))
-sum(grepl("Unshared.", samples))
 samples2 <- grep("Unshared.", samples, value =T)
 samples2 <- str_remove(samples2, "Unshared.Log.QC2_LateStageTumor_pool.QC1")
 samples2 <- samples2[nzchar(samples2)] # nzchar is a fast way to find out if elements of a character vector are non-empty strings.
@@ -1522,6 +1521,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
