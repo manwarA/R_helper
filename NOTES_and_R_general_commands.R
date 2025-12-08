@@ -123,6 +123,8 @@ parallel::parLapply(cl, 1:ncol(genes_list), surv_func, genes_list, survival_data
 #=========================================
 # Survival analysis
 #=========================================
+
+# BiocParallel is better than doParallel.
 library(survival)
 library(RegParallel)
 
@@ -155,7 +157,7 @@ res
 # No idea, String manipulation
 #===================================
 # string manipulation, regrex,  what for?
-samples <- gsub("(?<=QC1)[^;]*", "", samples, perl = TRUE)
+samples <- gsub("(?<=QC1)[^;]*", "", samples, perl = TRUE) # sub and gsub (global substitution)
 samples2 <- grepl("Unshared", samples2) 	# returns logical vector
 sum(grepl("LateStageTumor_pool.QC1", samples))
 samples2 <- grep("Unshared.", samples, value =T) # returns index or value of the term (if value=T)
@@ -363,7 +365,6 @@ densityPlot(getBeta(grSet), sampGroups=phenoData$group,
             main="Normalized", legend=FALSE)
 legend("top", legend = levels(factor(phenoData$group)),
        text.col=brewer.pal(8,"Dark2"))
-
 
 # Filtering
 # Poor performing probes can obscure the biological signals in the data and are 
@@ -1520,6 +1521,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
