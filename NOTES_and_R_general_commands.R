@@ -1323,7 +1323,7 @@ plot_from_file(pathDir, "cancerUp_MSigDB_Hallmark_2020.txt")
 # for heatmap; need to create a comprehensive structure
 heatmap ==> default or from base
 
-pheatmap::pheatmap(exprs(Normalize2), 
+pheatmap::pheatmap(df,  # 
 			annotation_col = ppp_p[, "response", drop = F] # This is the column/row annotation.
 			)
 
@@ -1338,18 +1338,18 @@ ComplexHeatmap::Heatmap(as.matrix(hm.all2[1:10,]),
 #==================================
 
 # ifelse() can be nested in many ways:
-
+# (1)
 ifelse(<condition>, <yes>, 
 	   ifelse(<condition>, <yes>, <no>)
 		)
-
+# (2)
 ifelse(<condition>, ifelse(<condition>, <yes>, <no>), <no>)
-
+# (3)
 ifelse(<condition>, 
        ifelse(<condition>, <yes>, <no>), 
        ifelse(<condition>, <yes>, <no>)
       )
-
+# (4)
 ifelse(<condition>, <yes>, 
        ifelse(<condition>, <yes>, 
               ifelse(<condition>, <yes>, <no>)
@@ -1377,7 +1377,7 @@ loadfonts(device = "win")
 # PCA
 #==================================
 
-# PCA and plot
+# PCA and ploting
 # quality check for normalized data
   mdaPcaRma <- Biobase::exprs(mdaDataRma)
   
@@ -1521,4 +1521,5 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
