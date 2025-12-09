@@ -1388,7 +1388,7 @@ loadfonts(device = "win")
   
   mdaPcaRmaGG <- data.frame(PC1 = mdaPcaRma$x[, 1], 
                             PC2 = mdaPcaRma$x[, 2],
-                            Disease = pData(mdaData)$`status of disease:ch1`,
+                            Disease = pData(mdaData)$`status of disease:ch1`, # commas if the col name has space
                             Phenotype = pData(mdaData)$`response to therapy:ch1`,
                             Individual = pData(mdaData)$`geo_accession`,
                             Gender = pData(mdaData)$`gender:ch1`)
@@ -1521,16 +1521,4 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
-
-
-
-
-
-
-
-
-
-
-
-
 
