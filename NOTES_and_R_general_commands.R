@@ -1145,7 +1145,7 @@ featureSel <- hybridFeatureSelection(df, "sampleType", hybrid_search_method, f_e
 
 roc.curve <- pROC::roc(	data = df, 
 		response = "sampleType",
-		predictor = "cg12483545",
+		predictor = "cg10000545",
 		ret = c("roc", "coords", "all_coords"),
 		ci = TRUE, plot = TRUE)
 
@@ -1521,5 +1521,6 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
