@@ -719,134 +719,6 @@ ifelse(match(des_geoa$des, colnames(mat)),
 des2 <- des[match(des, colnames(mat))]
 
 #==================================
-# GEO related, and other expression sets related
-#=================================
-gse <- getGEO("GSE33814", GSEMatrix = TRUE, 
-                destdir="E:/path_to_dir/geo_data",
-                getGPL = FALSE)
-
-if (length(gse) > 1) 
-	idx <- grep("GPL570", attr(gse, "names")) 
-						else idx <- 1
-gse <- gse[[idx]]
-
-# custom CDF install; may be relevant "https://www.biostars.org/p/67294/"
-# install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezgcdf_22.0.0.tar.gz", type="source", repos=NULL)
-# install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezgprobe_22.0.0.tar.gz", type="source", repos=NULL)
-# install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezg.db_22.0.0.tar.gz", type="source", repos=NULL)
-
-# convert series matrix (expression set) to annotatedDataFrame or ExpressionFeatureSet
-tADF <- AnnotatedDataFrame(#data = exprs(gse109),
-                   pData(phenoData(gse109)))
-                   
-#new("ExpressionFeatureSet", exprs= exprs(gse109))
-gse109_efs <- new("ExpressionFeatureSet",
-                  assayData = assayData(gse109),
-                  exprs= exprs(gse109), 
-                  phenoData = phenoData(gse109))#, 
-                  #featureData = featureData(gse109), 
-                  #experimentData = experimentData(gse109), 
-                  #annotation = gse109@annotation)#,
-                  #platform = gse109@annotation)
-
-#stopifnot(validObject(CelData))
-validObject(gse109)
-
-
-# create elist object to analyse Illumina microarray expression data; while analysing GSE109211, however, not all the variables were available at that time.
-gse190_elist <- new("EListRaw")
-
-gse190_elist@.Data[[1]] <- 'illumina'
-?gse190_elist@.Data[[2]] <- targetinfo
-gse190_elist@.Data[[3]] <- wdgs[[1]]
-gse190_elist@.Data[[4]] <- gse109_data_exp
-gse190_elist@.Data[[5]] <- NULL
-gse190_elist$E <- gse109_data_exp
-
-gse190_elist$targets <- targetinfo
-gse190_elist$genes <- wdgs[[1]]
-gse190_elist$other$Detection <- gse109_data_pvalue
-
-
-# reconstruct the CelData; FeatureExpressionSet
-# The FeatureSet class is VIRTUAL. Therefore users are not able to create instances of such class. 
-# Objects for FeatureSet-like classes can be created by calls of the form: 
-# new(CLASSNAME, assayData, manufacturer, platform, exprs, phenoData, featureData, experimentData, annotation, ...). 
-# But the preferred way is using parsers like read.celfiles and read.xysfiles.
-
-keep_row_pdata <- grepl("_2", rownames(pData(CelData)), ignore.case = T)
-
-pData(CelData) <- pData(CelData)[!keep_row_pdata, ]
-rownames(pData(CelData))  <- sub(pattern = "_1",replacement = "", x = rownames(pData(CelData)) )
-
-# expression feature set
-efs <- new("ExpressionFeatureSet",
-           manufacturer = "Affymetrix",
-           exprs = as.matrix(celdata_exp),
-           phenoData =   phenoData(CelData),
-           featureData = featureData(CelData),
-           annotation = "pd.hg.u133a")
-
-eCelData <- efs
-validObject(eCelData)
-
-#==================================
-# Affymatrix can be manipulated in multiple ways
-#=================================
-affyids <- gse37_deg$ID
-library(hgu133plus2.db)
-columns(hgu133plus2.db)
-
-select(hgu133plus2.db, keys = gse37_deg$ID, columns = c("SYMBOL"), keytype = "PROBEID")
-
-x <- hgu133plus2SYMBOL
-mapped_probes <- mappedkeys(x)
-test <- clusterProfiler::bitr(gse37$ID, fromType = "PROBEID", toType = "SYMBOL",
-                      OrgDb = "hgu133plus2.db", drop =TRUE)
-
-# for easier access, you can search ID type in the biomaRt object, 
-x = biomaRt::listAttributes(ensembl)
-x[grep("affy", x$description, ignore.case = T),]
-						
-mart <- biomaRt::useEnsembl("ensembl","hsapiens_gene_ensembl")
-converted_ID <- biomaRt::getBM(attributes=c('affy_hg_u133_plus_2', 'hgnc_symbol'), # data types you want.
-      filters = 'affy_hg_u133_plus_2',  # external_gene_name, or type of IDs you have.
-      values = gse$ID,           		# list of ID
-      mart = mart)
-
-#==================================
-# Convert geneIDs from ENSEM to ENTREIDs
-#==================================
-
-# While converting the names, BiTr usually returns a df with two columns, "fromType" & "toType", and it is oftenly difficult to match them
-# to the original dataset. This is a simple function around that concept that BiTr should bind to converted IDs back to the original df 
-# for easier downstream analysis
-
-bitr2 <- function(df) {
-    stopifnot(class(df)  == "data.frame")
-    message("Input is not dataframe")
-    items <- row.names(df)
-    itemsID <- clusterProfiler::bitr(items, fromType="ENSEMBL", 
-                                     toType=c("ENTREZID", "SYMBOL"),
-                                     OrgDb=organism, drop=TRUE)
-    df <- merge(df, itemsID, by.x = 0, by.y="ENSEMBL", all.x = TRUE)
-    df <- transform(df, log2FoldChange = as.numeric(log2FoldChange), 
-                    ENTREZID = as.numeric(ENTREZID))
-    df <- df[complete.cases(df),]
-    df = df[!duplicated(df$ENTREZID),]
-    message("after removing NA: ", dim(df))
-    df
-}
-
-# another way converting probeIDs to other IDs
-require(hgu133a.db)
-
-annotMaster1 <- select(hgu133a.db,
-  keys = keys(hgu133a.db, 'PROBEID'),
-  column = c('PROBEID',  'SYMBOL',  'ENTREZID', 'ENSEMBL'),
-  keytype = 'PROBEID')
-
-#==================================
 # Feature selction and machine learing
 #==================================
 # First, identify the highly correlated attributes to save time, generally, > abs(0.75) or higher
@@ -1649,6 +1521,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
