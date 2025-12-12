@@ -595,6 +595,7 @@ library(BiocParallel)
 # after that, using sapply, this function can be used to all the files.
 
 # pattern based matching and retreiving the data
+# both methods can be used, depending on needs.
 output1 <- Sys.glob("NCC_*_Proteome_KU_*\\OUTPUT\\")
 paths <- list.files(output1, 
 					pattern= glob2rx("*summed_tum_normal_refine*.csv$*"),
@@ -1522,6 +1523,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
