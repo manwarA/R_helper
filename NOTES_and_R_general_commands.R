@@ -594,11 +594,6 @@ library(BiocParallel)
 # Make a function to process each file, file name or identifier has to be appended to the respective columns. 
 # after that, using sapply, this function can be used to all the files.
 
-allFiles <- lapply(listOfFiles, function(x) readr::read_tsv(x,
-                                                col_names = T,
-                                                skip_empty_rows = T,
-                                                trim_ws = TRUE)
-
 # pattern based matching and retreiving the data
 output1 <- Sys.glob("NCC_*_Proteome_KU_*\\OUTPUT\\")
 paths <- list.files(output1, 
@@ -606,6 +601,12 @@ paths <- list.files(output1,
                     full.names=T, 
 					recursive=T)
 				 
+allFiles <- lapply(listOfFiles, function(x) readr::read_tsv(x,
+                                                col_names = T,
+                                                skip_empty_rows = T,
+                                                trim_ws = TRUE)
+
+			 
 processFile <- function(f) {
   bname = strsplit(basename(f), '_')[[1]][1]
   df = data.table::fread(f, 
@@ -1521,6 +1522,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
