@@ -597,7 +597,7 @@ library(BiocParallel)
 # pattern based matching and retreiving the data
 # both methods can be used, depending on needs.
 output1 <- Sys.glob("NCC_*_Proteome_KU_*\\OUTPUT\\")
-paths <- list.files(output1, 
+listOfFiles <- list.files(output1, 
 					pattern= glob2rx("*summed_tum_normal_refine*.csv$*"),
                     full.names=T, 
 					recursive=T)
@@ -607,7 +607,6 @@ allFiles <- lapply(listOfFiles, function(x) readr::read_tsv(x,
                                                 skip_empty_rows = T,
                                                 trim_ws = TRUE)
 
-			 
 processFile <- function(f) {
   bname = strsplit(basename(f), '_')[[1]][1]
   df = data.table::fread(f, 
@@ -616,8 +615,9 @@ processFile <- function(f) {
 						 header = TRUE, 
                          select = c(1,6:9), 
 						 data.table = TRUE)
-	# create and assign new col names for each file. 
-  colnames(df) = c('uniprot', 
+
+# create and assign new col names for each file. 
+colnames(df) = c('uniprot', 
 				   paste0(bname, '_1'), 
 				   paste0(bname, '_2'), 
                    paste0(bname, '_3'), 
@@ -636,7 +636,7 @@ reader.maf.files <- function(fpath, numb){
     file = file[col.to.keep]
     colnames(file)[1] <- bname
     colnames(file)[3:length(file)] = paste0(colnames(file)[3:length(file)], "_", counter)
-    counter <<- counter + 1  # "<<-" to update values outside of function.
+    counter <<- counter + 1  # "<<-" to update values outside of function. NOT RECOMMENDED THOUGH
     return(file)
 }
 
@@ -1523,6 +1523,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
