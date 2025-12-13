@@ -835,16 +835,16 @@ plot(f1)
 #======================================
 # linear model diagnostic
 #======================================
+# In addition to examining the diagnostic plots, it may be interesting and useful to examine, for each data point in turn, how removal of that point affects the regression coefficients, prediction and # so on. To get these values, 
+# R has corresponding function to use: 
+# diffs(), dfbetas(), covratio(), hatvalues() and cooks.distance(). 
+# For example, we assess how many standard errors the predicted value changes when the ith observation is removed via the following command. (Note that here it doesn't show the result.)
+diffs(lm3)
 
-
-
-						In addition to examining the diagnostic plots, it may be interesting and useful to examine, for each data point in turn, how removal of that point affects the regression coefficients, prediction and so on. To get these values, R has corresponding function to use: diffs(), dfbetas(), covratio(), hatvalues() and cooks.distance(). For example, we assess how many standard errors the predicted value changes when the ith observation is removed via the following command. (Note that here it doesn't show the result.)
-> diffs(lm3)
-Also, we can identify the leverage point via
-> # list the observation with large hat value
-> lm3.hat <- hatvalues(lm3)
-> id.lm3.hat <- which(lm3.hat > (2*(4+1)/nrow(fatdata))) ##  hatvalue > #2*(k+1)/n
-> lm3.hat[id.lm3.hat]
+# Also, we can identify the leverage point via list the observation with large hat value
+lm3.hat <- hatvalues(lm3)
+id.lm3.hat <- which(lm3.hat > (2*(4+1)/nrow(fatdata))) ##  hatvalue > #2*(k+1)/n
+lm3.hat[id.lm3.hat]
          5             9              12              28         39         79        106
 0.04724447 0.04100957 0.05727609 0.06020518 0.17631101 0.04596512 0.06125064
        207             216            235
@@ -1542,6 +1542,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
