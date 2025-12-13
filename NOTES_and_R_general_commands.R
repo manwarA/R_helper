@@ -835,6 +835,16 @@ plot(f1)
 #======================================
 # linear model diagnostic
 #======================================
+# Apart from summary(), some more extraction functions are also available. Table 4.2 lists generic function for fitted linear model objects. 
+# For example, we may obtain a plot of residuals versus fitted values via:
+plot(fitted(lm1), resid(lm1))
+qqnorm(resid(lm1))
+
+# and check whether residuals might have come from a normal distribution by checking for a straight line on a Q-Q plot via qqnorm() function. 
+# The plot()function for class lm() provides six types of diagnostic plots, four of which are shown by default. Their discussion will be postponed until later. 
+# All plots may be accessed individually using the which argument, for example, 
+plot(lm1, which=2) #, if only the QQ-plot is desired.
+
 # In addition to examining the diagnostic plots, it may be interesting and useful to examine, for each data point in turn, how removal of that point affects the regression coefficients, prediction and # so on. To get these values, 
 # R has corresponding function to use: 
 # diffs(), dfbetas(), covratio(), hatvalues() and cooks.distance(). 
@@ -845,11 +855,13 @@ diffs(lm3)
 lm3.hat <- hatvalues(lm3)
 id.lm3.hat <- which(lm3.hat > (2*(4+1)/nrow(fatdata))) ##  hatvalue > #2*(k+1)/n
 lm3.hat[id.lm3.hat]
-         5             9              12              28         39         79        106
-0.04724447 0.04100957 0.05727609 0.06020518 0.17631101 0.04596512 0.06125064
-       207             216            235
-0.04501627 0.05087598 0.05863139
-It indicates potential influential observations for 10 data points. This tells us that we need to pay attention to observations 5, 9, 12, 28, 39, 79, 106, 207, 216 and 235. If we also see these points standing out in other diagnostics, then more investigation might be warned.
+#         5             9              12              28         39         79        106
+# 0.04724447 0.04100957 0.05727609 0.06020518 0.17631101 0.04596512 0.06125064
+#       207             216            235
+# 0.04501627 0.05087598 0.05863139
+# It indicates potential influential observations for 10 data points. This tells us that we need to pay attention to observations 5, 9, 12, 28, 39, 79, 106, 207, 216 and 235. 
+# If we also see these points standing out in other diagnostics, then more investigation might be warned.
+
 #==================================
 # Model evaluation methods
 #==================================
@@ -1542,6 +1554,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
