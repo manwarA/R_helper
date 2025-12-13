@@ -878,6 +878,19 @@ lm3.hat[id.lm3.hat]
 # It indicates potential influential observations for 10 data points. This tells us that we need to pay attention to observations 5, 9, 12, 28, 39, 79, 106, 207, 216 and 235. 
 # If we also see these points standing out in other diagnostics, then more investigation might be warned.
 
+# Information for influence.measures() function. K = # (predictor)
+Function		Description		Rough Cut-off
+dffits()		the change in the fitted values (with appropriately scaled)		> 2*sqrt{(k+1)/n}
+dfbetas()		the changes in the coefficients (with appropriately scaled)		> 2/sqrt(n)
+covratio()		the change in the estimate of OLS covariance matrix				outside 1+/- 3*(k+1)/n
+hatvalues()		standardized distance to mean of predictors used to measure the leverage of observation		> 2*(k+1)/n
+cooks.distance()	standardized distance change for how far the estimate vector	> 4/n
+
+# Fortunately, it is not necessary to compute all the preceding quantities separately (although it is possible). 
+# R provides the convenience function influence.measures(), which simultaneously calls these functions (listed in Table 4.3). 
+# Note that the cut-off listed in Table 3 is just a suggestive point. It doesn't mean we always need to delete the points which are outside of cut-off points.
+summary(influence.measures(lm))						
+
 #==================================
 # Model evaluation methods
 #==================================
@@ -1425,6 +1438,15 @@ loadfonts(device = "win")
 #==================================
 # PCA
 #==================================
+# PCA and negative values: Each PC has one dimension, and the mid-point has value 0. The sign (positive or negative) tells you the direction that a given variable in that PC is going on a single dimension vector.
+# For example, if you have 5 variables, the first PC has an eigenvalue of 0.8, and the loadings of each variable in this PC are -0.8, -0.5, 0, 0.2, and 0.5, you can conclude that:
+# 1) Variable 3 doesn't play any role in explaining the variation on PC1 (Var3 has value = 0)
+# 2) Var4 has small role, whereas the others have sizable roles in explaining the variation due to that PC.
+# 3) Var1 will have greater impact than Var2 and Var5.
+# 4) There is a perfect contrast between Var2 and Var5
+# 5) FINALLY, the PC scores derived from this PC (linear function of this PC and the observed values for those variables) will show that individuals with negative PC scores will tent to 
+# 	have greater values of Var1 and Var2, and lower values for the remaining Vars, whereas individuals with PC scores greater than 0 will tend to have greater values of Var4 and Var5, 
+# 	and lower of the remaining. (https://www.researchgate.net/post/What-is-the-meaning-of-negative-values-in-components-from-PCA-analysis)
 
 # PCA and ploting
 # quality check for normalized data
@@ -1570,6 +1592,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
