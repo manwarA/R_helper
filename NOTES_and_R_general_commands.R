@@ -835,7 +835,22 @@ plot(f1)
 #======================================
 # linear model diagnostic
 #======================================
-# Apart from summary(), some more extraction functions are also available. Table 4.2 lists generic function for fitted linear model objects. 
+# Apart from summary(), some more extraction functions are also available. Table 4.2 lists generic function for fitted linear model objects.
+# Table 4.2:
+print()
+summary()
+coef()
+residuals()
+fitted()
+anova()
+predict()
+plot()
+confint()
+deviance()
+vcov()
+logLik()
+AIC
+						
 # For example, we may obtain a plot of residuals versus fitted values via:
 plot(fitted(lm1), resid(lm1))
 qqnorm(resid(lm1))
@@ -1554,6 +1569,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
