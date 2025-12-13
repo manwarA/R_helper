@@ -837,20 +837,21 @@ plot(f1)
 #======================================
 # Apart from summary(), some more extraction functions are also available. Table 4.2 lists generic function for fitted linear model objects.
 # Table 4.2:
-print()
-summary()
-coef()
-residuals()
-fitted()
-anova()
-predict()
-plot()
-confint()
-deviance()
-vcov()
-logLik()
-AIC
-						
+# Function; Description
+print()		# simple printed display
+summary() 	# standard regression output
+coef()		# (or coefficients()) extracting the regression coefficients
+residuals() # (or resid()) extracting residuals
+fitted() 	# (or fitted.values()) extracting fitted values
+anova() 	# comparison of nested models
+predict() 	# predictions for new data
+plot() 		# diagnostic plots
+confint() 	# confidence intervals for the regression coefficients
+deviance() 	# residual sum of squares
+vcov() 		# (estimated) variance-covariance matrix
+logLik()	# log-likelihood (assuming normally distribted errors)
+AIC 		# information criteria including AIC, BIC/SBC (assuming normally distributed errors)
+
 # For example, we may obtain a plot of residuals versus fitted values via:
 plot(fitted(lm1), resid(lm1))
 qqnorm(resid(lm1))
@@ -1569,6 +1570,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
