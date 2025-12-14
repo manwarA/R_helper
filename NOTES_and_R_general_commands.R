@@ -54,7 +54,8 @@ mydata <- mydata %>%
 		mutate(log2fc2 = log2fc + seq(0, by=0.00001, length.out= n()))
 
 # convert "character to numeric" in data frame
-raw.ad[] <- sapply(raw.ad, as.numeric) ; it preserves both col names and row names, plus it requires [] on left side
+# To preserve both col names and row names, it requires [] on left side
+raw.ad[] <- sapply(raw.ad, as.numeric) ; 
 
 # drop columns that have 1 factor level
 df[sapply(df, nlevels) > 1]
@@ -896,7 +897,6 @@ summary(influence.measures(lm))
 #==================================
 
 # for the entire model
-
 auc_check <- function(testModel, 
                       testData,
                       type = "prob",
@@ -1592,6 +1592,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
