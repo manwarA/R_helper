@@ -660,7 +660,7 @@ list_of_data %>% purrr::reduce(left_join, by = "row_names") # for purr based sol
 # data table approach,let see how efficient it is
 library(data.table)
 setkey(result_merge2, "uniprot")
-df2_3 <- as.data.table(merge2)[as.data.table(merge1), on = "uniprot"]# allow.cartesian=TRUE ]
+df2 <- as.data.table(merge2)[as.data.table(merge1), on = "uniprot"]# allow.cartesian=TRUE ]
 
 #result_merge <- result_merge[rowSums(is.na(result_merge[, 2:ncol(result_merge)])) == 0, ]
 #result_merge <- result_merge %>%  dplyr::select(-starts_with("gene"))
@@ -751,13 +751,13 @@ control_rfe = rfeControl(functions = rfFuncs, 	# random forest
                          number =  10) 			# number of folds
 
 # Performing RFE
-result_rfe = rfe(x = x_train, 
+result = rfe(x = x_train, 
                  y = as.factor(y_train), 
                  sizes = c(1:length(x_train)),
                  rfeControl = control_rfe)
 
 # summarising the results
-result_rfe
+summary(result)
 
 # creating a model using these features
 fitControl <- trainControl(## 10-fold CV
@@ -766,7 +766,7 @@ fitControl <- trainControl(## 10-fold CV
     repeats = 10,
     search = "random")  # hyper-parameters random search 
 
-model.cv <- train(sampleType ~ cg02855924+cg26325335+cg27071460+cg14823851+cg01573747,
+model.cv <- train(sampleType ~ feature_1+feature_2+feature_3, # any feature that needs to be included.
                   data = caret.train,
                   method = "glmnet", family = "binomial",
                   trControl = fitControl,
@@ -1592,6 +1592,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
