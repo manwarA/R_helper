@@ -1574,7 +1574,12 @@ setColToRow <- function(df = df,
 # p >> n
 #=========================================
 
-
+# Feature selection
+#	   Correlation, RFE
+# Projection method
+#	   SVD, PCA and t_SNE
+# Regularized algorithm
+#	   LARS and Lasso
 
 
 
@@ -1608,20 +1613,4 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
