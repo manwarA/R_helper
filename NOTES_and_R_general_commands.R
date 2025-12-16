@@ -599,14 +599,14 @@ library(BiocParallel)
 # both methods can be used, depending on needs.
 output1 <- Sys.glob("NCC_*_Proteome_KU_*\\OUTPUT\\")
 listOfFiles <- list.files(output1, 
-					pattern= glob2rx("*summed_tum_normal_refine*.csv$*"),
+					pattern= glob2rx("*tum_normal*.csv$*"), # $ indicates the end of string, e.g. tum_normal*.csv must be at the end.
                     full.names=T, 
 					recursive=T)
 				 
 allFiles <- lapply(listOfFiles, function(x) readr::read_tsv(x,
                                                 col_names = T,
                                                 skip_empty_rows = T,
-                                                trim_ws = TRUE)
+                                                trim_ws = TRUE))
 
 processFile <- function(f) {
   bname = strsplit(basename(f), '_')[[1]][1]
@@ -1608,5 +1608,6 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
