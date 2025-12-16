@@ -273,6 +273,7 @@ geo_data <- getGEO(GEO = "GSE12456",
 				   destdir = dir_path,
 				  GSEMatrix = T, 
 				  getGPL = F) # getGPL can be heavy
+
 # read local data, series_matrix file
 series_mat <- getGEO(filename = file_path,
 					GSEMatrix = True)
@@ -1610,6 +1611,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
