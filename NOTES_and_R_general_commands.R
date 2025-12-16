@@ -34,8 +34,7 @@ version
 .libPaths()
 
 # check the common element between two vector
-intersect(Up, Dn)
-# "Metazoa_SRP" "Y_RNA" 
+intersect(vec_1, vec_2)
 
 # reading excel files
 # library needed (readxl)
@@ -62,6 +61,9 @@ df[sapply(df, nlevels) > 1]
 
 # compare all files in the list
 outer(allFiles, allFiles, Vectorize(all.equal))
+
+# a quick introduction of any package
+vignette("dplyr")
 
 #===================================
 # multiple word replcement
@@ -1608,6 +1610,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
