@@ -1087,7 +1087,7 @@ cbind.fill <- function(...) {
 							}
 
 #==================================
-# Unloading of package.
+# Unloading of package. It does not work.
 #==================================						  
 # It does not work though, especially, when updating/installting packages are being used in the environment.
 # Unload name space, remove package from environment, unload
@@ -1145,7 +1145,7 @@ install.packages(save.pkg.list)
 #==================================
 
 library(FDb.InfiniumMethylation.hg19)
-# list all the contents in the package
+# list all the contents/functions in the package
 ls('package:FDb.InfiniumMethylation.hg19')
  [1] "FDb.InfiniumMethylation.hg19" "get27k"                      
  [3] "get450k"                      "getNearest"                  
@@ -1182,7 +1182,7 @@ dat <- GEDI(datasets, attributes = attr, BioMart = TRUE,
             species = "hsapiens", path = PATH_TO_DATA_FOLDERS)
 
 #==================================
-# Linear/logistic regression analysis For feature selection
+# Linear/logistic regression analysis for feature selection
 #==================================
 #probes should be in column, samples in rows, and additional column for sample type
 library(FSinR) # feature selection in R
@@ -1228,7 +1228,7 @@ roc_df <- data.frame(
 # Plot various aspects of linear/log regression such as residual plot etc.
 #==================================
 
-# needs to updat
+# It has been updated.
 						  
 #==================================
 # Machine learning in R
@@ -1611,6 +1611,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
