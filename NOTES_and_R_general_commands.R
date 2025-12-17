@@ -648,7 +648,7 @@ counter = 1
 maf.luad <- lapply(files, reader.maf.files)
 				 
 #===================================
-# Merging
+# Merge multiple files
 #===================================
 # Multimerge, merge multiple dfs, if the number of dfs are large and the size is also big, it can run out of memory.
 # allow.cartesian = TRUE is default in DF, while in data.table merge, it is FALSE, 
@@ -1611,6 +1611,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
