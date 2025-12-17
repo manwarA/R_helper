@@ -5,12 +5,6 @@ library(dplyr)
 #===================================
 # General
 #===================================
-# data.table fread is faster than regular read.csv
-file <- data.table::fread("file.csv",
-						  sep = "\t", 
-						  blank.lines.skip=TRUE, 
-						  header = TRUE)
-
 # Run this command in case many background files are open e.g. plots or pdf files
 dev.off()
 
@@ -595,6 +589,12 @@ library(BiocParallel)
 #===================================
 # Process multiple files
 #===================================
+# data.table fread is faster than regular read.csv
+file <- data.table::fread("file.csv",
+						  sep = "\t", 
+						  blank.lines.skip=TRUE, 
+						  header = TRUE)
+				 
 # Make a function to process each file, file name or identifier has to be appended to the respective columns. 
 # after that, using sapply, this function can be used to all the files.
 
@@ -1611,6 +1611,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
