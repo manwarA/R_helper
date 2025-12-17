@@ -735,16 +735,16 @@ corrMatrix <- cor(df) # output is all * all cor matrix of same dim
 highlyCorrelated <- caret::findCorrelation(corrMatrix, cutoff = 0.75)
 
 # remove those features that have > 0.75 correlation 
-dresist_lung_corr75 <- dresist_lung[, -highlyCorrelated]
+df_corr75 <- df_lung[, -highlyCorrelated]
 
 # createDataPartition() function from the caret package to split the original dataset into
 # a training and testing set and split data into training (80%) and testing set (20%)
 
 parts = createDataPartition(dresist_lung$sampleType, p = 0.8, list = F)
-caret.train = dresist_lung_corr75[parts, ]
-caret.test = dresist_lung_corr75[-parts, ]
-x_train = caret.train[, -length(dresist_lung_corr75)]
-y_train = caret.train[,  length(dresist_lung_corr75)]
+caret.train = df_corr75[parts, ]
+caret.test = df_corr75[-parts, ]
+x_train = caret.train[, -length(df_corr75)]
+y_train = caret.train[,  length(df_corr75)]
 
 # specifying the CV technique as well as the random forest algorithm which will be passed into 
 # the recursive feature eleminiation (rfe) rfe() function in feature selection
@@ -1611,6 +1611,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
