@@ -391,14 +391,17 @@ converted_ID <- biomaRt::getBM(attributes=c('affy_hg_u133_plus_2', 'hgnc_symbol'
 bitr2 <- function(df) {
     stopifnot(class(df)  == "data.frame")
     message("Input is not dataframe")
-    items <- row.names(df)
+
+	items <- row.names(df)
     itemsID <- clusterProfiler::bitr(items, fromType="ENSEMBL", 
                                      toType=c("ENTREZID", "SYMBOL"),
                                      OrgDb=organism, drop=TRUE)
-    df <- merge(df, itemsID, by.x = 0, by.y="ENSEMBL", all.x = TRUE)
+    
+	df <- merge(df, itemsID, by.x = 0, by.y="ENSEMBL", all.x = TRUE)
     df <- transform(df, log2FoldChange = as.numeric(log2FoldChange), 
                     ENTREZID = as.numeric(ENTREZID))
-    df <- df[complete.cases(df),]
+    
+	df <- df[complete.cases(df),]
     df = df[!duplicated(df$ENTREZID),]
     message("after removing NA: ", dim(df))
     df
@@ -1611,6 +1614,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
