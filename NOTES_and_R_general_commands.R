@@ -906,7 +906,7 @@ summary(influence.measures(lm))
 auc_check <- function(testModel, 
                       testData,
                       type = "prob",
-                      targetColumn = "status2",
+                      targetColumn = "status",
                       plot = TRUE) {
     require(ROCR)
     
@@ -922,7 +922,7 @@ auc_check <- function(testModel,
     
 }
 
-auc_check(testModel = model.cv.f5, testData = caret.train, plot = FALSE)
+auc_check(testModel = model.cv, testData = caret.train, plot = FALSE)
 
 auc_check2 <- function(model, 
                        testData, 
@@ -1614,6 +1614,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
