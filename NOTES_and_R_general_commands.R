@@ -929,7 +929,6 @@ auc_check2 <- function(model,
                        trainData, 
                        targetClass = "targetCol")
 {
-    
     require(dplyr)
     require(yardstick)
     class <- predict(model, testData)
@@ -960,9 +959,7 @@ auc_check2(model.cv.f5, caret.test, caret.train, targetClass = "status2")
 pred.prob <- predict(model.cv.f5, newdata = caret.test, type = "raw")
 caret::confusionMatrix(data = pred.prob, caret.test$status2, positive = "Rec")
 
-#==================================
-# ROC curve in R
-#==================================
+# ROC curve in R using pROC
 library(pROC)
 
 roc.cg00074348 <- pROC::roc(data = betas.fs.2, 
@@ -1612,6 +1609,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
