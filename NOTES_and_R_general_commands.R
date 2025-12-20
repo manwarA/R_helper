@@ -899,7 +899,7 @@ cooks.distance()	standardized distance change for how far the estimate vector	> 
 summary(influence.measures(lm))						
 
 #==================================
-# Model evaluation methods
+# ROC; mdoel evaluation using ROC
 #==================================
 
 # for the entire model
@@ -956,9 +956,7 @@ auc_check2 <- function(model,
 
 auc_check2(model.cv.f5, caret.test, caret.train, targetClass = "status2")
 
-
 # confusion matrix will not work if type != "raw", 
-
 pred.prob <- predict(model.cv.f5, newdata = caret.test, type = "raw")
 caret::confusionMatrix(data = pred.prob, caret.test$status2, positive = "Rec")
 
@@ -1614,6 +1612,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
