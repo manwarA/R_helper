@@ -1390,7 +1390,7 @@ pheatmap::pheatmap(df,  #
 			annotation_col = ppp_p[, "response", drop = F] # This is the column/row annotation.
 			)
 
-ComplexHeatmap::Heatmap(as.matrix(hm.all2[1:10,]),
+ComplexHeatmap::Heatmap(as.matrix(hm.all2),
                         na_col = "grey",
                         column_dend_side = "top",
                         col = circlize::colorRamp2(c(-3, 0, 3), c("Darkblue", "white", "red")),
@@ -1465,7 +1465,6 @@ loadfonts(device = "win")
                             Individual = pData(mdaData)$`geo_accession`,
                             Gender = pData(mdaData)$`gender:ch1`)
     
-  
   ggplot(mdaPcaRmaGG, aes(PC1, PC2)) +
     geom_point(aes(shape = Disease, colour = Phenotype), size = 5) +
     ggtitle("PCA plot of the calibrated, summarized data") +
@@ -1496,7 +1495,6 @@ keep_one_column <- function(input_df, term){
   } else {
     mat_col <- input_df
   }
-  
     # if (length(col_list) > 1){
     # mat_col <- colData(input_df)[ col_list ]
     
@@ -1609,6 +1607,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
