@@ -141,7 +141,7 @@ res <- RegParallel(
           ties = 'breslow',
           singular.ok = TRUE),
   FUNtype = 'coxph',
-  variables = colnames(vsd_survival), 
+  variables = colnames(survival), 
   blocksize = 2000,
   cores = 2,
   nestedParallel = FALSE,
@@ -1580,11 +1580,7 @@ setColToRow <- function(df = df,
 # Regularized algorithm
 #	   LARS and Lasso
 
-
-
-
-
-	   
+  
 #=========================================
 # add snippet to the RStudio
 #=========================================
@@ -1607,17 +1603,4 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
-
-
-
-
-
-
-
-
-
-
-
-
-
 
