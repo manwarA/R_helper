@@ -554,7 +554,6 @@ plotMDS(getM(grSetFlt), top=1000, gene.selection="common",
 legend("right", legend=levels(factor(phenoData$group)), text.col=pal,
        cex=0.7, bg="white")
 
-
 # create cluster of probes to be analyzed together
 # grSet_with_beta <- ratioConvert(grSet)
 # grSet_with_beta_grange <- mapToGenome(grSet_with_beta)
@@ -826,7 +825,6 @@ survey::regTermTest(model.cv.f5.glm, "ENSG00000169398")
 survey::regTermTest(model.cv.f5.glm, feat5[5])
 survey::regTermTest(model.cv.f3.glm, "ENSG00000169398")
 survey::regTermTest(model.cv.f1.glm, "ENSG00000169398")
-
 
 
 pred <- predict(model.cv.f5, newdata = caret.test)
@@ -1600,5 +1598,6 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
