@@ -1,5 +1,7 @@
 library(stringr)
 library(dplyr)
+library(mlbench)
+library(caret)
 
 # This is for general history and commands list
 #===================================
@@ -1228,15 +1230,10 @@ roc_df <- data.frame(
 
 # It has been updated.
 						  
-#==================================
-# Machine learning in R
-#==================================
-library(mlbench)
-library(caret)
-
 #================================== 
 # detach a package in R
 #==================================
+# It can be tried, but hope is thin that it will work.
 detach("package:pscl", unload=TRUE)
 #You can also use the unloadNamespace command, as in:
 unloadNamespace("pscl")
@@ -1603,4 +1600,5 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
