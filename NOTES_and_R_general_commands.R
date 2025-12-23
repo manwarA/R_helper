@@ -586,9 +586,9 @@ library(BiocParallel)
 
 # need to add the command sequence, however, it is similar to any model fitting method;
 # (1) create model matrix
-# (2) linear model fitting
-# (3) creation of contrasts (optional)
-# (4) analysis
+# (2) creation of contrasts (optional)
+# (3) linear model fitting
+# (4) analysis 
 				 
 #===================================
 # Process multiple files
@@ -1598,6 +1598,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
