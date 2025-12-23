@@ -481,7 +481,9 @@ probeTypes <- rbind(typeI, typeII)
 probeTypes$Type <- rep(x = c("I", "II"), times = c(nrow(typeI), nrow(typeII)))
 
 # Now plot the distributions of the normalized data for sample 1
-plotBetasByType(getBeta(grSet)[,1], probeTypes = probeTypes, main="Normalized",)
+plotBetasByType(getBeta(grSet)[,1], 
+				probeTypes = probeTypes, 
+				main="Normalized",)
 
 # Does it look like the normalization brought the distributions closer to each other? 
 # Now let’s see how the between-array normalization worked.
@@ -1598,6 +1600,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
