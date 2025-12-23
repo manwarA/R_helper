@@ -1223,12 +1223,6 @@ roc_df <- data.frame(
   FPR=rev(1 - roc.cg$specificities), 
   labels=roc.cg$response, 
   scores=roc.cg$predictor)
-
-#==================================
-# Plot various aspects of linear/log regression such as residual plot etc.
-#==================================
-
-# It has been updated.
 						  
 #================================== 
 # detach a package in R
@@ -1422,7 +1416,8 @@ exp(mean(log(x)))
 
 # this and the foloowing function is same or in function from
 geometric.mean <- function(x, na.rm=TRUE) { 
-		exp(mean(log(x),na.rm=na.rm))		}
+		exp(mean(log(x),na.rm=na.rm))		
+	}
 
 #==================================
 # Install new fonts in R
@@ -1600,4 +1595,5 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
