@@ -193,6 +193,11 @@ x$stat <- sapply(1:nrow(x), function(i)
 wilcox.test(as.numeric(common2[1, 2:193]), random_dist, paired = F, alternative = "two.sided")
 
 #===================================
+# list of stat tests
+#===================================
+				 
+
+#===================================
 # Limma for gene expression
 #===================================
 # limma for microarray data analysis
@@ -1595,5 +1600,6 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
