@@ -196,8 +196,10 @@ wilcox.test(as.numeric(common2[1, 2:193]), random_dist, paired = F, alternative 
 # list of stat tests
 #===================================
 # https://r-statistics.co/Statistical-Tests-in-R.html
+# https://stats.oarc.ucla.edu/r/whatstat/what-statistical-analysis-should-i-usestatistical-analyses-using-r/
 t.test()
 wilcox.test()
+kruskal.test()
 shapiro.test()
 ks.test()
 var.test()
@@ -1608,6 +1610,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
