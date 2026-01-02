@@ -1176,7 +1176,10 @@ res2.annotated.sig.tss2 <- getNearestTSS(res2.annotated.sig.gene)
 #==================================
 # GEDI data integration, and batch correction
 #==================================						  
+# resources 
+# https://www.biostars.org/p/266507/
 # Ref: https://github.com/MNStokholm/GEDI
+
 library(GEDI)
 
 dataFolders <- c("lung_data/",
@@ -1199,14 +1202,12 @@ dat <- GEDI(datasets, attributes = attr, BioMart = TRUE,
 # another way is to use LIMMA 
 removeBatchEffect(x, batch=NULL, batch2=NULL, covariates=NULL,
                   design=matrix(1,ncol(x),1), ...)
+
 # yet another way is to use comBat
-sva::comBat()
+sva::comBat() # it should be avoided for RNA seq
+
 sva::comBat_seq() # for rna counts
 
-# resource 
-# https://www.biostars.org/p/266507/
-
-						  
 #==================================
 # Linear/logistic regression analysis for feature selection
 #==================================
@@ -1621,6 +1622,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
