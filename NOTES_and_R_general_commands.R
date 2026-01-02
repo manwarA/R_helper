@@ -1196,6 +1196,10 @@ attr <- c("ensembl_gene_id", "affy_hg_u133a_2" , "affy_hg_focus")
 dat <- GEDI(datasets, attributes = attr, BioMart = TRUE,
             species = "hsapiens", path = PATH_TO_DATA_FOLDERS)
 
+# another way is to use LIMMA 
+removeBatchEffect(x, batch=NULL, batch2=NULL, covariates=NULL,
+                  design=matrix(1,ncol(x),1), ...)						  
+						  
 #==================================
 # Linear/logistic regression analysis for feature selection
 #==================================
@@ -1610,6 +1614,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
