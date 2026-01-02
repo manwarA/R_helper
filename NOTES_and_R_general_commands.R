@@ -1178,6 +1178,7 @@ res2.annotated.sig.tss2 <- getNearestTSS(res2.annotated.sig.gene)
 #==================================						  
 # resources 
 # https://www.biostars.org/p/266507/
+#https://stopsack.github.io/batchtma/
 # Ref: https://github.com/MNStokholm/GEDI
 
 library(GEDI)
@@ -1207,6 +1208,14 @@ removeBatchEffect(x, batch=NULL, batch2=NULL, covariates=NULL,
 sva::comBat() # it should be avoided for RNA seq
 
 sva::comBat_seq() # for rna counts
+
+# using BatchTMA
+df_adjust <- adjust_batch(data = df, markers = biomarker, batch = tma, method = simple)
+
+# plot the differences, before and after batch correction.
+plot_batch(data = df, marker = biomarker, batch = tma, title = "Raw data")
+plot_batch(data = df_adjust, marker = biomarker_adj2, batch = tma, title = "Adjusted data")
+
 
 #==================================
 # Linear/logistic regression analysis for feature selection
@@ -1622,6 +1631,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
