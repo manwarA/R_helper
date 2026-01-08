@@ -61,6 +61,11 @@ outer(allFiles, allFiles, Vectorize(all.equal))
 # a quick introduction of any package
 vignette("dplyr")
 
+# To remove all the variables except functions. 
+# Source - https://stackoverflow.com/a/8305850
+rm(list = setdiff(ls(), lsf.str()))
+
+
 #===================================
 # multiple word replcement
 #===================================
@@ -1631,6 +1636,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
