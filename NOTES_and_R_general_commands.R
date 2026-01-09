@@ -65,6 +65,8 @@ vignette("dplyr")
 # Source - https://stackoverflow.com/a/8305850
 rm(list = setdiff(ls(), lsf.str()))
 
+# ls does not capture the variable names starting wtih ., in case to capture these names, use
+ls(all.names = TRUE)
 
 #===================================
 # multiple word replcement
@@ -1636,6 +1638,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
