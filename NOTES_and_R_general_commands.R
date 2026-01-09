@@ -1223,7 +1223,6 @@ df_adjust <- adjust_batch(data = df, markers = biomarker, batch = tma, method = 
 plot_batch(data = df, marker = biomarker, batch = tma, title = "Raw data")
 plot_batch(data = df_adjust, marker = biomarker_adj2, batch = tma, title = "Adjusted data")
 
-
 #==================================
 # Linear/logistic regression analysis for feature selection
 #==================================
@@ -1638,6 +1637,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
