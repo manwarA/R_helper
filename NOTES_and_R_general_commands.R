@@ -71,6 +71,9 @@ ls(all.names = TRUE)
 # to make col.names or index names unique and R compatible
 make.names()
 
+# anaother option is 
+make.unique()
+
 #===================================
 # TODO list
 #===================================
@@ -1656,6 +1659,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
