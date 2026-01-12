@@ -68,6 +68,9 @@ rm(list = setdiff(ls(), lsf.str()))
 # ls does not capture the variable names starting wtih ., in case to capture these names, use
 ls(all.names = TRUE)
 
+# to make col.names or index names unique and R compatible
+make.names()
+
 #===================================
 # TODO list
 #===================================
@@ -1653,6 +1656,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
