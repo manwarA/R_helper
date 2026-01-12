@@ -81,6 +81,19 @@ dir.create()
 dir.remove # create this function
 dir.delete
 
+
+dir.delete <- function(dir_name){
+  
+  if(dir.exists(dir_name)) {
+  unlink(dir_name, 
+         recursive = TRUE,
+         force = TRUE,
+         expand = TRUE)
+  } else {
+    cat("Either name is invalid or directory does not exists.")
+  }
+}
+
 # e.g.  
 # unlink("mydir", recursive = TRUE) # will delete directory called 'mydir'
 
@@ -1659,6 +1672,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
