@@ -77,10 +77,8 @@ make.unique()
 #===================================
 # TODO list
 #===================================
-dir.create()
 dir.remove # create this function
 dir.delete
-
 
 dir.delete <- function(dir_name){
   
@@ -1672,6 +1670,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
