@@ -883,7 +883,6 @@ survey::regTermTest(model.cv.f5.glm, feat5[5])
 survey::regTermTest(model.cv.f3.glm, "ENSG00000169398")
 survey::regTermTest(model.cv.f1.glm, "ENSG00000169398")
 
-
 pred <- predict(model.cv.f5, newdata = caret.test)
 accuracy <- table(pred, caret.test[, "status2"])
 sum(diag(accuracy))/sum(accuracy)
@@ -1670,6 +1669,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
