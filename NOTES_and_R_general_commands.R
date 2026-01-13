@@ -889,11 +889,9 @@ sum(diag(accuracy))/sum(accuracy)
 
 confusionMatrix(data=pred, caret.test$status2)# not working
 
-
 # ROC for single variable
 f1 <- pROC::roc(status2 ~ model.cv.f5, data = caret.test) 
 plot(f1)
-
 
 #======================================
 # linear model diagnostic
@@ -957,7 +955,6 @@ summary(influence.measures(lm))
 #==================================
 # ROC; mdoel evaluation using ROC
 #==================================
-
 # for the entire model
 auc_check <- function(testModel, 
                       testData,
@@ -1669,6 +1666,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
