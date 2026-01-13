@@ -7,6 +7,8 @@ library(caret)
 #===================================
 # General
 #===================================
+# In R, different characters can be used as functions as well, such as "]", 
+
 # Run this command in case many background files are open e.g. plots or pdf files
 dev.off()
 
@@ -50,7 +52,7 @@ mydata <- mydata %>%
 
 # convert "character to numeric" in data frame
 # To preserve both col names and row names, it requires [] on left side
-raw.ad[] <- sapply(raw.ad, as.numeric) ; 
+raw.ad[] <- sapply(raw.ad, as.numeric)
 
 # drop columns that have 1 factor level
 df[sapply(df, nlevels) > 1]
@@ -1666,6 +1668,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
