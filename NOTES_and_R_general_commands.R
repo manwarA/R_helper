@@ -97,11 +97,11 @@ dir.delete <- function(dir_name){
 # e.g.  
 # unlink("mydir", recursive = TRUE) # will delete directory called 'mydir'
 
-# .unlink <- function(x, recursive = FALSE, force = FALSE) {
-#  if (unlink(x, recursive, force) == 0)
-#    return(invisible(TRUE))
-#  stop(sprintf("Failed to remove [%s]", x))
-#  }
+.unlink <- function(x, recursive = FALSE, force = FALSE) {
+  if (unlink(x, recursive, force) == 0)
+    return(invisible(TRUE))
+  stop(sprintf("Failed to remove [%s]", x))
+  }
 
 #===================================
 # multiple word replcement
@@ -1668,6 +1668,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
