@@ -860,6 +860,12 @@ anova(model.cv.f5.glm, model.cv.f4.glm, test = "Chisq")
 anova(model.cv.f3.glm, model.cv.f5.glm, test = "Chisq")
 anova(model.cv.f3.glm, model.cv.f4.glm, test = "Chisq")
 
+# difference between anova and LRT
+# Likelihood Ratio Test (LRT) and ANOVA are both statistical methods used to compare nested models, 
+# but they differ in their underlying assumptions, implementation, and default behavior in R. 
+# LRT (Likelihood Ratio Test): Tests whether a more complex (full) model provides a significantly better fit to the data than a simpler (null) model, based on the ratio of their likelihoods. 
+# ANOVA (Analysis of Variance): Compares models by examining the reduction in residual sum of squares (RSS) when additional terms are added. 
+
 lmtest::lrtest(model.cv.f3.glm, model.cv.f1.glm)
 
 # pseudo R-squred R2 test; Most notable is McFadden’s R2, which is defined as 1−[ln(LM)/ln(L0)]
@@ -1673,6 +1679,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
