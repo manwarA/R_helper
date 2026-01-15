@@ -1115,6 +1115,11 @@ BigSummary <- function (data, lev = NULL, model = NULL) {
 #==================================
 # boxplot
 #==================================
+# a simple barplot for visual inspection of differential expression of a specific gene
+# between tumor and normal samples. 
+# Gene name shoule be the row name, and for tumor and normal samples, another
+# vector is required containing the names of samples belonging to each category.
+						
 checkDiffExp <- function(geneName, df) {
     normal = df[rownames(df) == geneName, samples.solid.tissue.normal]
     tumor  = df[rownames(df) == geneName, samples.primary.tumour]
@@ -1668,6 +1673,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
