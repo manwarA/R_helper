@@ -855,16 +855,14 @@ TEST.scored <- cbind(caret.test,class,probs) %>% mutate(data = "TEST")
 #==========================
 # Linear modeling related
 #==========================
-# significant difference between models; likelyhood ratio test
-anova(model.cv.f5.glm, model.cv.f4.glm, test = "Chisq")
-anova(model.cv.f3.glm, model.cv.f5.glm, test = "Chisq")
-anova(model.cv.f3.glm, model.cv.f4.glm, test = "Chisq")
-
 # difference between anova and LRT
 # Likelihood Ratio Test (LRT) and ANOVA are both statistical methods used to compare nested models, 
 # but they differ in their underlying assumptions, implementation, and default behavior in R. 
 # LRT (Likelihood Ratio Test): Tests whether a more complex (full) model provides a significantly better fit to the data than a simpler (null) model, based on the ratio of their likelihoods. 
 # ANOVA (Analysis of Variance): Compares models by examining the reduction in residual sum of squares (RSS) when additional terms are added. 
+
+# significant difference between models; likelyhood ratio test
+anova(model.cv.f5.glm, model.cv.f4.glm, test = "Chisq")
 
 lmtest::lrtest(model.cv.f3.glm, model.cv.f1.glm)
 
@@ -1679,6 +1677,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
