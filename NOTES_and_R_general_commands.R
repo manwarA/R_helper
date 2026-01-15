@@ -1119,7 +1119,7 @@ BigSummary <- function (data, lev = NULL, model = NULL) {
 # between tumor and normal samples. 
 # Gene name shoule be the row name, and for tumor and normal samples, another
 # vector is required containing the names of samples belonging to each category.
-						
+# TODO: perform t.test and label the bar with "*". It can be done in ggplot
 checkDiffExp <- function(geneName, df) {
     normal = df[rownames(df) == geneName, samples.solid.tissue.normal]
     tumor  = df[rownames(df) == geneName, samples.primary.tumour]
@@ -1673,6 +1673,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
