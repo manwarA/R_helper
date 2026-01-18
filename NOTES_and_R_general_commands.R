@@ -1,8 +1,3 @@
-library(stringr)
-library(dplyr)
-library(mlbench)
-library(caret)
-
 # This is for general history and commands list
 #===================================
 # General
@@ -1677,6 +1672,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
