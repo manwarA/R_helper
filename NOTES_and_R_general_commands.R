@@ -973,8 +973,7 @@ auc_check <- function(testModel,
         plot(perf)}
     auc = ROCR::performance(pred, measure = "auc")
     auc = auc@y.values[[1]]
-    return(auc) 
-    
+    return(auc)
 }
 
 auc_check(testModel = model.cv, testData = caret.train, plot = FALSE)
@@ -1673,6 +1672,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
