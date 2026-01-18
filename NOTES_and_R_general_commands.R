@@ -243,6 +243,8 @@ var.test()
 chisq.test()
 fisher.test()
 friedman.test()
+qqnorm()
+qqplot()
 
 #===================================
 # Limma for gene expression
@@ -1672,6 +1674,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
