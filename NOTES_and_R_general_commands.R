@@ -159,8 +159,8 @@ parallel::parLapply(cl, 1:ncol(genes_list), surv_func, genes_list, survival_data
 #=========================================
 # Survival analysis
 #=========================================
-
 # BiocParallel is better than doParallel.
+# RegParallel has been created by Kevin Bleigh. 
 library(survival)
 library(RegParallel)
 
@@ -1672,6 +1672,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
