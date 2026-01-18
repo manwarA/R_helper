@@ -299,7 +299,7 @@ head(top.table, 20)
 # making it really hard to convert it into ExpressionSet
 
 # for annotating hgu133plus2 Affymatrix data set
-# BiocManager::install("hgu133plus2probe") for annotation
+# BiocManager::install("hgu133plus2probe")# for annotation
 # BiocManager::install("gcrma")
 # BiocManager::install("hgu133plus2cdf")
 # BiocManager::install("hgu133plus2.db")
@@ -1672,6 +1672,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
