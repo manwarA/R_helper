@@ -358,22 +358,21 @@ gse <- gse[[idx]]
 # install.packages("http://mbni.org/customcdf/22.0.0/entrezg.download/hgu133ahsentrezg.db_22.0.0.tar.gz", type="source", repos=NULL)
 
 # convert series matrix (expression set) to annotatedDataFrame or ExpressionFeatureSet
-tADF <- AnnotatedDataFrame(#data = exprs(gse109),
-                   pData(phenoData(gse109)))
+tADF <- AnnotatedDataFrame(#data = exprs(gseobject),
+                   pData(phenoData(gseobject)))
                    
-#new("ExpressionFeatureSet", exprs= exprs(gse109))
+#new("ExpressionFeatureSet", exprs= exprs(gseobject))
 gse109_efs <- new("ExpressionFeatureSet",
-                  assayData = assayData(gse109),
-                  exprs= exprs(gse109), 
-                  phenoData = phenoData(gse109))#, 
-                  #featureData = featureData(gse109), 
-                  #experimentData = experimentData(gse109), 
-                  #annotation = gse109@annotation)#,
-                  #platform = gse109@annotation)
+                  assayData = assayData(gseobject),
+                  exprs= exprs(gseobject), 
+                  phenoData = phenoData(gseobject))#, 
+                  #featureData = featureData(gseobject), 
+                  #experimentData = experimentData(gseobject), 
+                  #annotation = gseobject@annotation)#,
+                  #platform = gseobject@annotation)
 
 #stopifnot(validObject(CelData))
-validObject(gse109)
-
+validObject(gseobject)
 
 # create elist object to analyse Illumina microarray expression data; while analysing GSE109211, however, not all the variables were available at that time.
 gse190_elist <- new("EListRaw")
@@ -1674,6 +1673,7 @@ snippet ss
 	#=========================================
 	#
 	#=========================================
+
 
 
 
