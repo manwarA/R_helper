@@ -85,7 +85,7 @@ dir.delete <- function(dir_name){
          force = TRUE,
          expand = TRUE)
   } else {
-    cat("Either name is invalid or directory does not exists.")
+    cat("Name of directory is invalid or directory does not exists.")
   }
 }
 
